@@ -34,7 +34,9 @@ find_status(::Type{Val{:Optimal}}) = StatusOptimal()
 find_status(::Type{Val{:Infeasible}}) = StatusInfeasible()
 find_status(::Type{Val{:Unbounded}}) = StatusUnbounded()
 
+find_status(s::Symbol) = find_status(Val{s})
+
 """
     Construct status error from MathProgBase Symbol
 """
-find_status(s::Symbol) = StatusError("Other status from MathProgBase", Dict("status", s))
+find_status(s) = StatusError("Other status from MathProgBase", Dict("status" => s))

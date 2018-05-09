@@ -8,8 +8,7 @@
     Optional methods (otherwise provided):
     * `solve!`
 """
-abstract type AbstractMasterProblem{ST} where ST <: AbstractSubProblem
-end
+abstract type AbstractMasterProblem{ST<:AbstractSubProblem} end
 
 """
     solve_restricted solves the MasterProblem with current columns
