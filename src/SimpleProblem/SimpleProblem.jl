@@ -42,7 +42,7 @@ function solve(sp::SimpleSubProblem,π,σ)
     reduced_costs = [t[1] - t[2] for t in zip(sp.costs,π)] - σ
     result = MathProgBase.mixintprog(reduced_costs, sp.A, sp.sense, sp.b, sp.vartypes, sp.lb, sp.ub, sp.solver)
     final_status = find_status(result.status)
-    return (final_status, [result.objval], [result.sol])
+    return (final_status, [result.objval], hcat(result.sol))
 end
 
 end
