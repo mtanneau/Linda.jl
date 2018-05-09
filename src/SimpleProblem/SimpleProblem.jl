@@ -35,7 +35,8 @@ end
 function solve(sp::SimpleSubProblem,π::V1,σ::V2) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
     reduced_costs = [t[1] - t[2] for t in zip(sp.costs,π)] - σ
     result = MathProgBase.mixintprog(reduced_costs, sp.A, sp.sense, sp.b, sp.vartypes, sp.lb, sp.ub, sp.solver)
-    return (result.status, [result.objval], [result.sol])
+    final_status = find_status(result.status)
+    return (final_status, [result.objval], [result.sol])
 end
 
 end

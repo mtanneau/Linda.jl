@@ -29,3 +29,12 @@ struct StatusError <:AbstractStatus
 end
 
 StatusError() = StatusError("", Dict{String,Any}())
+
+find_status(::Type{Val{:Optimal}}) = StatusOptimal()
+find_status(::Type{Val{:Infeasible}}) = StatusInfeasible()
+find_status(::Type{Val{:Unbounded}}) = StatusUnbounded()
+
+"""
+    Construct status error from MathProgBase Symbol
+"""
+find_status(s::Symbol) = StatusError("Other status from MathProgBase", Dict("status", s))
