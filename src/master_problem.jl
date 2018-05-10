@@ -4,35 +4,26 @@
     * `generate_column`
     * `subproblem()`
     * `add_columns!`
-    * `solve_restricted!`
-    * `update_dual_variables!``
+    * `compute_dual_variables!``
     Optional methods (otherwise provided):
     * `solve!`
 """
 abstract type AbstractMasterProblem{ST<:AbstractSubProblem} end
 
 """
-    solve_restricted! solves the MasterProblem with current columns
-"""
-function solve_restricted!(::AbstractMasterProblem)
-    warn("Implement solve_restricted for concrete MasterProblem types")
-    status = StatusError()
-    π = [0.0]
-    σ = [0.0]
-    return (status, π, σ)
-end
-
-"""
-    update_dual_variables! computes the next dual iterate
+    compute_dual_variables! computes the next dual iterate
+    with dual variables pi and sigma corresponding to two sets of constraints
 
     By default, this will solve the restricted master problem (RMP),
     and return the obtained dual variables.
 
     Other update rules can be implemented here, e.g. Lagrange step, heuristic update, etc...
 """
-function update_dual_variables!(mp::AbstractMasterProblem)
-    # default behaviour: just solve the RMP
-    (status, π, σ) = solve_restricted!(mp)
+function compute_dual_variables!(mp::AbstractMasterProblem)
+    warn("Implement compute_dual_variables! for concrete MasterProblem types")
+    status = StatusError()
+    π = [0.0]
+    σ = [0.0]
     return (status, π, σ)
 end
 
@@ -55,7 +46,7 @@ function add_columns!(::AbstractMasterProblem, costs::AbstractVector,columns::Ab
     new columns computed
 """
 function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
-    (status, π, σ) = solve_restricted!(mp)
+    (status, π, σ) = compute_dual_variables!(mp)
     if !ok(status)
         return status
     end
@@ -69,7 +60,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         end
         add_columns!(mp,costs,columns)
         newcols += 1
-        (status, π, σ) = update_dual_variables!(mp)
+        (status, π, σ) = compute_dual_variables!(mp)
         if !ok(status)
             return status
         end
