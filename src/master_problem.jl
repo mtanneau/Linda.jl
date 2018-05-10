@@ -11,13 +11,9 @@
 abstract type AbstractMasterProblem{ST<:AbstractSubProblem} end
 
 """
-    compute_dual_variables! computes the next dual iterate
-    with dual variables pi and sigma corresponding to two sets of constraints
-
-    By default, this will solve the restricted master problem (RMP),
-    and return the obtained dual variables.
-
-    Other update rules can be implemented here, e.g. Lagrange step, heuristic update, etc...
+    compute_dual_variables! computes the next dual iterate,
+    where pi is the dual variable associated to linking constraints,
+    and sigma is associated to the convexity constraint.
 """
 function compute_dual_variables!(mp::AbstractMasterProblem)
     warn("Implement compute_dual_variables! for concrete MasterProblem types")
@@ -35,13 +31,13 @@ function subproblem(::AbstractMasterProblem) end
 
 """
     add_columns! is used to (validate and) add columns and
-    corresponding costs to the current master problem
+    corresponding costs to the restricted master problem
 """
 function add_columns!(::AbstractMasterProblem, costs::AbstractVector,columns::AbstractMatrix) end
 
 """
     solve! has a default version for any MasterProblem
-    It adds column(s) to the master while a new solution can be found
+    It adds column(s) to the restricted master while a new solution can be found
     in the subproblem. `maxcols` can be used to limit the number of
     new columns computed
 """
@@ -58,7 +54,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
             # not ok, no new negative cost column was found, early return 
             return status
         end
-        add_columns!(mp,costs,columns)
+        add_columns!(mp, costs, columns)
         newcols += 1
         (status, π, σ) = compute_dual_variables!(mp)
         if !ok(status)
