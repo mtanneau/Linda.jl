@@ -1,7 +1,6 @@
 """
     MasterProblem is a main problem to solve using column generation
-    Required methods to implement:  
-    * `generate_column`
+    Required methods to implement:
     * `subproblem()`
     * `add_columns!`
     * `compute_dual_variables!``
