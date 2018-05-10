@@ -7,7 +7,7 @@ import MathProgBase
 
 import Linda:
     AbstractSubProblem, AbstractMasterProblem, solve_pricing,
-    find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible
+    find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok
 
 export SimpleSubProblem, SimpleMasterProblem
 
@@ -46,7 +46,7 @@ function solve_pricing(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
     # get solution
     if !ok(final_status)
         # Error when solving sub-problem: return no column
-        return (final_status, Array{Float64,1}(), Matrix{Float64}(0, 0))
+        return (final_status, zeros(0,), zeros(0,0))
         # TODO: handle unbounded sub-problem
         #   In this case, a (primal) extreme ray is added to the master problem
     else
@@ -56,14 +56,12 @@ function solve_pricing(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
     end
 
     # check that reduced cost is indeed negative
-    if rc < -10.0^-6
+    if rc < -eps(Float32)
         return (final_status, [cost], hcat(col))
     else
         # reduced cost is 0: return no column
-        return (final_status, Array{Float64,1}(), Matrix{Float64}(0, 0))
+        return (final_status, zeros(0,), zeros(0,0))
     end
-
-    # end of function
 end
 
 mutable struct SimpleMasterProblem{SimpleSubProblem,N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real} <: AbstractMasterProblem{SimpleSubProblem} where {N1<:Number,N2<:Number,N3<:Number,N4<:Number,N5<:Number}
