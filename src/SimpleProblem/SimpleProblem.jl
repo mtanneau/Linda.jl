@@ -6,7 +6,7 @@ module SimpleProblem
 import MathProgBase
 
 import Linda:
-    AbstractSubProblem, AbstractMasterProblem, solve,
+    AbstractSubProblem, AbstractMasterProblem, price,
     find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible
 
 export SimpleSubProblem, SimpleMasterProblem
@@ -25,9 +25,9 @@ end
 # TODO build convenient constructor functions for SimpleSubProblem
 
 """
-    solve implementation for SimpleSubProblem
+    price implementation for SimpleSubProblem
 """
-function solve(sp::SimpleSubProblem,π,σ, farkas_pricing = false)
+function price(sp::SimpleSubProblem,π,σ, farkas_pricing = false)
     reduced_costs = [t[1] - t[2] for t in zip(sp.costs,π)] - σ
     result = MathProgBase.mixintprog(reduced_costs, sp.A, sp.sense, sp.b, sp.vartypes, sp.lb, sp.ub, sp.solver)
     final_status = find_status(result.status)
