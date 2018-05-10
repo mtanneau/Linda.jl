@@ -22,6 +22,18 @@ mutable struct SimpleSubProblem{N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real} <:
     solver::MathProgBase.AbstractMathProgSolver
 end
 
+# TODO build convenient constructor functions for SimpleSubProblem
+
+"""
+    solve implementation for SimpleSubProblem
+"""
+function solve(sp::SimpleSubProblem,π,σ)
+    reduced_costs = [t[1] - t[2] for t in zip(sp.costs,π)] - σ
+    result = MathProgBase.mixintprog(reduced_costs, sp.A, sp.sense, sp.b, sp.vartypes, sp.lb, sp.ub, sp.solver)
+    final_status = find_status(result.status)
+    return (final_status, [result.objval], hcat(result.sol))
+end
+
 mutable struct SimpleMasterProblem{SimpleSubProblem,N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real} <: AbstractMasterProblem{SimpleSubProblem} where {N1<:Number,N2<:Number,N3<:Number,N4<:Number,N5<:Number}
     costs::AbstractVector{N1}
     A::AbstractMatrix{N2}
@@ -34,15 +46,5 @@ mutable struct SimpleMasterProblem{SimpleSubProblem,N1<:Real,N2<:Real,N3<:Real,N
 end
 
 # TODO build convenient constructor functions for SimpleMasterProblem
-
-"""
-    solve implementation for SimpleSubProblem
-"""
-function solve(sp::SimpleSubProblem,π,σ)
-    reduced_costs = [t[1] - t[2] for t in zip(sp.costs,π)] - σ
-    result = MathProgBase.mixintprog(reduced_costs, sp.A, sp.sense, sp.b, sp.vartypes, sp.lb, sp.ub, sp.solver)
-    final_status = find_status(result.status)
-    return (final_status, [result.objval], hcat(result.sol))
-end
 
 end
