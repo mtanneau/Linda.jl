@@ -1,36 +1,48 @@
 """
-    AbstractStatus designs status signal returned after a problem is solved
-    Basic ones are provided, other can be defined by inheritance and defining ok()
+    AbstractStatus designs status signal returned after a problem is solved.
+    Basic ones are provided, other can be defined by inheritance and defining
+        the `ok()` function.
 """
 abstract type AbstractStatus end
 
 """
-    ok is a function used to check if a status is
-    fine (iterations of the column generation should continue)
+    ok is a function used to check if a status is fine
+        (i.e., iterations of the column generation should continue)
 """
 ok(::AbstractStatus) = true
 
 """
-    StatusOptimal is returned if a problem could be solved to optimality
+    StatusOptimal is returned if a problem is solved to proven optimality.
 """
 struct StatusOptimal <: AbstractStatus end
 
 ok(::StatusOptimal) = true
 
 """
-    StatusInfeasible is returned if a problem could not be solved
+    StatusInfeasible is returned if a problem is proven to be infeasible.
+    In the case of Linear Programs, the solver should also provide
+        a dual extreme ray as proof of infeasibility.
 """
 struct StatusInfeasible <: AbstractStatus end
 ok(::StatusInfeasible) = false
 
 """
-    StatusUnbounded is returned if the solution in unbounded
+    StatusFeasible is returned when a feasible solution is found, but optimality
+        was not proven.
+"""
+struct StatusFeasible <: AbstractStatus end
+ok(::StatusFeasible) = false  # to avoid cycling in the column-generation
+
+"""
+    StatusUnbounded is returned if the problem is proven to be unbounded.
+    In the case of Linear Programs, the solver should also provide a primal
+        extreme ray as proof of unboundedness.
 """
 struct StatusUnbounded <: AbstractStatus end
 ok(::StatusUnbounded) = false
 
 """
-    StatusTimeout is returned if the solution was not found under certain
+    StatusTimeout is returned if no solution was found within certain
     computation limits (number of columns, time, etc)
 """
 struct StatusTimeout <: AbstractStatus end
