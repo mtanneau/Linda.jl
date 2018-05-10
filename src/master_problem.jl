@@ -53,6 +53,11 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
             # Early return caused by error when solving sub-problem
             return status
         end
+        if length(columns) == 0
+            # no columns added: current solution is optimal
+            return StatusOptimal()
+        end
+        
         add_columns!(mp, costs, columns)
         newcols += 1
         (status, π, σ) = compute_dual_variables!(mp)
