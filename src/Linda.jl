@@ -1,6 +1,6 @@
 module Linda
 
-export AbstractMasterProblem, AbstractSubProblem, solve, find_status
+export AbstractMasterProblem, AbstractSubProblem, solve_pricing, find_status
 
 # package code goes here
 include("problem_status.jl")
