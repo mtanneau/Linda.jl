@@ -22,6 +22,22 @@ function solve_restricted(::AbstractMasterProblem)
 end
 
 """
+    update_dual_iterate computes the next dual iterate
+
+    By default, this will solve the restricted master problem (RMP),
+    and return the obtained dual variables.
+
+    Other update rules can be implemented here, e.g. Lagrange step, heuristic update, etc...
+"""
+function update_dual_variables(mp::AbstractMasterProblem)
+
+    # default behaviour: just solve the RMP
+    (status, π, σ) = solve_restricted(mp)
+
+    return (status, π, σ)
+end
+
+"""
     subproblem returns the subproblem attached to a master
     to define in the implementation
 """
@@ -54,7 +70,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         end
         add_columns!(mp,costs,columns)
         newcols += 1
-        (status, π, σ) = solve_restricted(mp)
+        (status, π, σ) = update_dual_variables(mp)
         if !ok(status)
             return status
         end
