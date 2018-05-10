@@ -10,8 +10,9 @@ abstract type AbstractSubProblem end
     * costs returns a vector of N costs, one for each new column created
     * columns returns a MxN matrix (if the master problem has M constraints)
     * status indicates the status of the subproblem, must be an AbstractStatus
+    `farkas_pricing` indicates whether to use Farkas pricing to generate column 
 """
-function solve(::AbstractSubProblem, π::V1,σ::V2) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
+function solve(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
     costs = [0.0]
     columns = zeros(2,1)
     warn("Implement solve for the SubProblem")
