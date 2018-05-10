@@ -23,7 +23,7 @@ abstract type AbstractSubProblem end
 function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
     costs = [0.0]
     columns = zeros(2,1)
-    warn("Implement solve for the SubProblem")
+    warn("Implement solve_pricing for the SubProblem")
     status = StatusError()
     return (status, costs, columns)
 end

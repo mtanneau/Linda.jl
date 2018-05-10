@@ -25,7 +25,7 @@ end
 # TODO build convenient constructor functions for SimpleSubProblem
 
 """
-    price implementation for SimpleSubProblem
+    solve_pricing implementation for SimpleSubProblem
 """
 function solve_pricing(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
 
