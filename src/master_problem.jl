@@ -17,8 +17,8 @@ abstract type AbstractMasterProblem{ST<:AbstractSubProblem} end
 function compute_dual_variables!(mp::AbstractMasterProblem)
     warn("Implement compute_dual_variables! for concrete MasterProblem types")
     status = StatusError()
-    π = [0.0]
-    σ = [0.0]
+    π = zeros(0,)
+    σ = zeros(1,)
     return (status, π, σ)
 end
 
@@ -57,7 +57,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
             # no columns added: current solution is optimal
             return StatusOptimal()
         end
-        
+
         add_columns!(mp, costs, columns)
         newcols += 1
         (status, π, σ) = compute_dual_variables!(mp)
