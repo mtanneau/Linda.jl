@@ -3,7 +3,7 @@
     Required methods to implement:  
     * `generate_column`
     * `subproblem()`
-    * `add_column!`
+    * `add_columns!`
     * `solve_restricted`
     Optional methods (otherwise provided):
     * `solve!`
@@ -28,6 +28,12 @@ end
 function subproblem(::AbstractMasterProblem) end
 
 """
+    add_columns! is used to (validate and) add columns and
+    corresponding costs to the current master problem
+"""
+function add_columns!(::AbstractMasterProblem, costs::AbstractVector,columns::AbstractMatrix) end
+
+"""
     solve! has a default version for any MasterProblem
     It adds column(s) to the master while a new solution can be found
     in the subproblem. `maxcols` can be used to limit the number of
@@ -46,7 +52,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
             # not ok, no new negative cost column was found, early return 
             return status
         end
-        add_column!(mp,costs,columns)
+        add_columns!(mp,costs,columns)
         newcols += 1
         (status, π, σ) = solve_restricted(mp)
         if !ok(status)
