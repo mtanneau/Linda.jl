@@ -6,20 +6,21 @@
 abstract type AbstractSubProblem end
 
 """
-    price performs the pricing of the current dual iterate, and returns a set of `N` columns.
-    Note that `N` may be equal to zero.
+    price performs the pricing of the current dual iterate, and returns a set
+    of `N` columns, where `N` may be equal to zero.
     
     Arguments:
-    * `pi` is the vector of dual variables associated to linking constraints in the master
-    * `sigma` is the (Vector of) dual variable(s) associated to convexity constraint(s)
-    * `farkas_pricing` indicates whether to perform Farkas pricing, or regular pricing
+    * `pi` is the vector of dual variables associated to linking constraints
+    * `sigma` is the (vector of) dual variable(s) associated to convexity constraint(s)
+    * `farkas_pricing` indicates whether to perform Farkas or regular pricing
     
     Returns:
-    * `costs` is N-dimensional vector that contains the cost if each generated column
-    * `columns` is a MxN matrix, where `M` is the number of linking constraints in the master,
+    * `costs` is a N-dimensional vector that contains the native costs of
+        the generated columns.
+    * `columns` is a MxN matrix, that contains the `N` generated columns.
     * `status` indicates the status of the subproblem, must be an AbstractStatus
 """
-function price(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
+function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
     costs = [0.0]
     columns = zeros(2,1)
     warn("Implement solve for the SubProblem")
