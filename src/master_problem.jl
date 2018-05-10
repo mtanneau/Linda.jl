@@ -48,7 +48,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
     sp = subproblem(mp)
     newcols = 0
     while newcols < maxcols
-        (status, costs, columns) = solve(sp, π, σ)
+        (status, costs, columns) = price!(sp, π, σ)
         if !ok(status)
             # not ok, no new negative cost column was found, early return 
             return status
