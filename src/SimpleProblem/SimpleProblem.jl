@@ -74,7 +74,7 @@ function solve_pricing!(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
     end
 
     # check that reduced cost is indeed negative
-    if rc < -eps(Float32)
+    if rc < - 10.0^-6  # default solver tolerance for reduced costs
         # column with negative reduced cost
         sp.columns = [column]
     else
