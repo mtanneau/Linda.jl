@@ -45,7 +45,6 @@ end
 """
 function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
 
-
     # TODO: initialize restricted master (e.g. artificial variables)
     # TODO: heuristic hotstart
 
@@ -63,7 +62,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         (rmp_status, π, σ) = compute_dual_variables!(mp)
         if !ok(rmp_status)
             # exit if problem encountered during dual update
-            warn("SRMP status $(rmp_status) currently not handled, terminate")
+            warn("RMP status $(rmp_status) currently not handled, terminate")
             return rmp_status
         end
 
