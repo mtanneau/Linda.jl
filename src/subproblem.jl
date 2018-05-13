@@ -20,7 +20,7 @@ abstract type AbstractSubProblem end
     * `columns` is a MxN matrix, that contains the `N` generated columns.
     * `status` indicates the status of the subproblem, must be an AbstractStatus
 """
-function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
+function solve_pricing(::AbstractSubProblem, π::V1,σ::N2, farkas_pricing = false) where {V1<:AbstractVector{N1}} where {N1<:Real, N2<:Real}
     N = 0 # number of columns returned
     costs = zeros(N,)
     columns = zeros(2,N)

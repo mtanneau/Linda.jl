@@ -27,18 +27,14 @@ end
 """
     solve_pricing implementation for SimpleSubProblem
 """
-function solve_pricing(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
+function solve_pricing(sp::SimpleSubProblem, π::V1, σ::N2, farkas_pricing=false) where {V1<:AbstractVector{N1}} where {N1<:Real, N2<:Real}
 
     # form perturbed objective for the sub-problem
-    if farkas_pricing
-        obj_ = - π
-    else
-        obj_ = sp.costs - π
-    end
+    obj = farkas_pricing ? (-π) : (sp.costs - π)
 
     # solve sub-problem
     result = MathProgBase.mixintprog(
-        obj_,
+        obj,
         sp.A, sp.sense, sp.b, sp.vartypes, sp.lb, sp.ub, sp.solver
     )
     final_status = find_status(result.status)
@@ -49,11 +45,10 @@ function solve_pricing(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
         return (final_status, zeros(0,), zeros(0,0))
         # TODO: handle unbounded sub-problem
         #   In this case, a (primal) extreme ray is added to the master problem
-    else
-        col = result.sol  # column
-        cost = dot(sp.costs, col)  # native cost
-        rc = result.objval - σ  # reduced cost
     end
+    col = result.sol  # column
+    cost = dot(sp.costs, col)  # native cost
+    rc = result.objval - σ  # reduced cost
 
     # check that reduced cost is indeed negative
     if rc < -eps(Float32)

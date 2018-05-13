@@ -64,7 +64,7 @@ find_status(::Type{Val{:Optimal}}) = StatusOptimal()
 find_status(::Type{Val{:Infeasible}}) = StatusInfeasible()
 find_status(::Type{Val{:Unbounded}}) = StatusUnbounded()
 
-find_status(s::Symbol) = find_status(Val{s})
+find_status(s::Symbol)::AbstractStatus = find_status(Val{s})
 
 """
     Construct status error from MathProgBase Symbol
