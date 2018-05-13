@@ -6,8 +6,8 @@ module SimpleProblem
 import MathProgBase
 
 import Linda:
-    AbstractSubProblem, AbstractMasterProblem, Column,
-    solve_pricing, get_new_columns
+    AbstractSubProblem, AbstractMasterProblem, Column, PricingResult,
+    solve_pricing,
     find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok, isinfeasible
 
 export SimpleSubProblem, SimpleMasterProblem
@@ -63,26 +63,24 @@ function solve_pricing!(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
     # get solution
     if !ok(sp_status)
         # Error when solving sub-problem: return no column
-        return sp_status
+        return PricinStatus(sp_status, Array{Column, 1}())
         # TODO: handle unbounded sub-problem
         #   In this case, a (primal) extreme ray is added to the master problem
-    else
-        col = result.sol  # column
-        cost = dot(sp.costs, col)  # native cost
-        rc = result.objval - σ  # reduced cost
-        column = Column(cost, col, true, false)  # create column object
     end
+    
+    # get column
+    col = result.sol  # column
+    cost = dot(sp.costs, col)  # native cost
+    rc = result.objval - σ  # reduced cost
 
     # check that reduced cost is indeed negative
     if rc < - 10.0^-6  # default solver tolerance for reduced costs
-        # column with negative reduced cost
-        sp.columns = [column]
+        columns = [Column(cost, col, true, false)]
     else
-        # reduced cost is 0: discard column
-        sp.columns = Array{Column, 1}()
+        columns = Array{Column, 1}()  # reduced cost is 0: return no column
     end
 
-    return sp_status
+    return PricinStatus(sp_status, columns)
 end
 
 """
@@ -120,6 +118,8 @@ function SimpleMasterProblem(
     solver::MathProgBase.AbstractMathProgSolver
     sp::ST
 ) where {N1<:Number, N2<:Number, ST<:AbstractSubProblem}
+
+    # dimension check
     nlinkingconstrs = size(A, 1)  # number of linking constraints
     nlinkingconstrs == size(senses, 1) || DimensionMismatch("")
     nlinkingconstrs == size(b, 1) || DimensionMismatch("")

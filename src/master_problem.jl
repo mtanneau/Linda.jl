@@ -67,28 +67,28 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         end
 
         # II. Pricing step
-        sp_status = solve_pricing(sp, π, σ)
+        pricingresult = solve_pricing(sp, π, σ)
         # check pricing status
-        if isinfeasible(sp_status)
+        if isinfeasible(pricingresult.status)
             # sub-problem is infeasible: problem is infeasible
             warn("Infeasible sub-problem: problem is infeasible")
             return StatusInfeasible()
 
-        elseif !ok(sp_status)
+        elseif !ok(pricingresult.status)
             # Early return caused by error when solving sub-problem
             # TODO: expand handling of return status
-            warn("Pricing status $(sp_status) currently not handled, terminate")
-            return sp_status
+            warn("Pricing status $(res_pricing.sp_status) currently not handled, terminate")
+            return pricingresult.status
         end
 
         # III. Update Master formulation
-        columns = get_new_columns(sp)  # get columns from sub-problem
-        if length(columns) == 0
+        if length(pricingresult.columns) == 0
             # no columns added: current solution is optimal
+            # TODO: handle case where no columns are generated after heuristic solve
             return StatusOptimal()
         end
 
-        ncolsadded = add_columns!(mp, columns)
+        ncolsadded = add_columns!(mp, pricingresult.columns)
         newcols += ncolsadded
     end
     return StatusTimeout()

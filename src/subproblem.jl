@@ -6,7 +6,19 @@
 abstract type AbstractSubProblem end
 
 """
-    price performs the pricing of the current dual iterate, and returns a set
+    PricingResult stores relevant information following a pricing step,
+    including the return status of the sub-problem, and the columns that were
+    generated (if any).
+"""
+struct PricingResult
+
+    status::AbstractStatus  # return status of the sub-problem
+    columns::Array{Column, 1}  # columns generated during pricing
+
+end
+
+"""
+    solve_pricing performs the pricing of the current dual iterate, and returns a set
     of `N` columns, where `N` may be equal to zero.
     
     Arguments:
@@ -21,17 +33,7 @@ function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = fal
     
     warn("Implement solve_pricing for concrete SubProblem types")
     status = StatusError()
-    return status
-end
-
-"""
-    get_new_columns
-    Returns a (possibly empty) array of Column objects
-"""
-function get_new_columns(sp::AbstractSubProblem)
-
-    warn("Implement get_new_columns for concrete SubProblem types")
     columns = Array{Column, 1}()  # empty set of columns
-    return columns
 
+    return PricingResult(status, columns)
 end
