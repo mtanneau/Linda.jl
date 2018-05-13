@@ -30,8 +30,8 @@ end
 """
 function get_new_columns(sp::AbstractSubProblem)
 
-    columns = Array{Column, 1}()  # empty set of columns
     warn("Implement get_new_columns for concrete SubProblem types")
+    columns = Array{Column, 1}()  # empty set of columns
     return columns
 
 end

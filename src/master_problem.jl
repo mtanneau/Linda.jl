@@ -68,10 +68,17 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
 
         # II. Pricing step
         sp_status = solve_pricing(sp, π, σ)
-        if !ok(status)
+        # check pricing status
+        if isinfeasible(sp_status)
+            # sub-problem is infeasible: problem is infeasble
+            warn("Infeasbile sub-problem: problem is infeasible")
+            return StatusInfeasible()
+            
+        elseif !ok(sp_status)
             # Early return caused by error when solving sub-problem
             # TODO: expand handling of return status
-            return status
+            warn("Status $(sp_status) currently not handled, terminate")
+            return sp_status
         end
 
         # III. Update Master formulation
