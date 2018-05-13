@@ -32,7 +32,10 @@ function subproblem(::AbstractMasterProblem) end
     add_columns! is used to (validate and) add columns and
     corresponding costs to the restricted master problem
 """
-function add_columns!(::AbstractMasterProblem, costs::AbstractVector,columns::AbstractMatrix) end
+function add_columns!(::AbstractMasterProblem, columns::Array{Column, 1})
+    warn("Implement add_columns! for concrete MasterProblem types")
+    return 0
+end
 
 """
     solve! has a default version for any MasterProblem
@@ -41,29 +44,45 @@ function add_columns!(::AbstractMasterProblem, costs::AbstractVector,columns::Ab
     new columns computed
 """
 function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
-    (status, π, σ) = compute_dual_variables!(mp)
-    if !ok(status)
-        return status
-    end
+
+
+    # TODO: initialize restricted master (e.g. artificial variables)
+    # TODO: heuristic hotstart
+
     sp = subproblem(mp)
-    newcols = 0
+    newcols = 0  # number of columns added to the master problem
+    ncgiter = 0  # number of Column Generation iterations
+
     while newcols < maxcols
-        (status, costs, columns) = solve_pricing(sp, π, σ)
+
+        ncgiter += 1
+        # TODO: display relevant info, e.g.:
+        # iter, number of columns, primal/dual bounds, etc...
+
+        # I. Dual update
+        (status, π, σ) = compute_dual_variables!(mp)
         if !ok(status)
-            # Early return caused by error when solving sub-problem
+            # exit if problem encountered during dual update
             return status
         end
+
+        # II. Pricing step
+        sp_status = solve_pricing(sp, π, σ)
+        if !ok(status)
+            # Early return caused by error when solving sub-problem
+            # TODO: expand handling of return status
+            return status
+        end
+
+        # III. Update Master formulation
+        columns = get_new_columns(sp)  # get columns from sub-problem
         if length(columns) == 0
             # no columns added: current solution is optimal
             return StatusOptimal()
         end
 
-        add_columns!(mp, costs, columns)
-        newcols += 1
-        (status, π, σ) = compute_dual_variables!(mp)
-        if !ok(status)
-            return status
-        end
+        ncolsadded = add_columns!(mp, columns)
+        newcols += ncolsadded
     end
     return StatusTimeout()
 end

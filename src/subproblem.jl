@@ -14,17 +14,24 @@ abstract type AbstractSubProblem end
     * `sigma` is the (vector of) dual variable(s) associated to convexity constraint(s)
     * `farkas_pricing` indicates whether to perform Farkas or regular pricing
     
-    Returns a tuple (status, costs, columns):
-    * `costs` is a N-dimensional vector that contains the native costs of
-        the generated columns.
-    * `columns` is a MxN matrix, that contains the `N` generated columns.
+    Returns:
     * `status` indicates the status of the subproblem, must be an AbstractStatus
 """
 function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
-    N = 0 # number of columns returned
-    costs = zeros(N,)
-    columns = zeros(2,N)
-    warn("Implement solve_pricing for the SubProblem")
+    
+    warn("Implement solve_pricing for concrete SubProblem types")
     status = StatusError()
-    return (status, costs, columns)
+    return status
+end
+
+"""
+    get_new_columns
+    Returns a (possibly empty) array of Column objects
+"""
+function get_new_columns(sp::AbstractSubProblem)
+
+    columns = Array{Column, 1}()  # empty set of columns
+    warn("Implement get_new_columns for concrete SubProblem types")
+    return columns
+
 end

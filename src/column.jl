@@ -1,17 +1,13 @@
 """
-    AbstractColumn
+    Column
 
-    Abstract structure for holding columns.
+    Data structure for holding columns and related information.
 """
+mutable struct Column 
 
-mutable struct AbstractColumn end
+    cost::Real  # native cost of the column
+    col::AbstractVector  # column coefficients
+    isvertex::Bool  # whether column is vertex (true) or ray (false)
+    isactive::Bool  # whether column is currently in the RMP
 
-"""
-    getnativecost
-    Return the (native) cost of a column
-"""
-function getnativecost(::AbstractColumn)
-    warn("Implement getcolcost for concrete implementation!")
-    return 0.0
 end
-
