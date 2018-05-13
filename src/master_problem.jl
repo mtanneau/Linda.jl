@@ -60,24 +60,25 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         # iter, number of columns, primal/dual bounds, etc...
 
         # I. Dual update
-        (status, π, σ) = compute_dual_variables!(mp)
-        if !ok(status)
+        (rmp_status, π, σ) = compute_dual_variables!(mp)
+        if !ok(rmp_status)
             # exit if problem encountered during dual update
-            return status
+            warn("SRMP status $(rmp_status) currently not handled, terminate")
+            return rmp_status
         end
 
         # II. Pricing step
         sp_status = solve_pricing(sp, π, σ)
         # check pricing status
         if isinfeasible(sp_status)
-            # sub-problem is infeasible: problem is infeasble
-            warn("Infeasbile sub-problem: problem is infeasible")
+            # sub-problem is infeasible: problem is infeasible
+            warn("Infeasible sub-problem: problem is infeasible")
             return StatusInfeasible()
-            
+
         elseif !ok(sp_status)
             # Early return caused by error when solving sub-problem
             # TODO: expand handling of return status
-            warn("Status $(sp_status) currently not handled, terminate")
+            warn("Pricing status $(sp_status) currently not handled, terminate")
             return sp_status
         end
 
