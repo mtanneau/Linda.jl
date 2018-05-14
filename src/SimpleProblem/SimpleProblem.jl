@@ -169,7 +169,7 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
         σ = zeros(1,)
     else
         # RMP solved to optimality
-        dualsolution = MathProgBase.getconstrdual(mp.rmp)
+        dualsolution = MathProgBase.getconstrduals(mp.rmp)
         π = (mp.A)' * dualsolution[1:nlinkingconstrs]  # project dual vector to original space
         σ = dualsolution[nlinkingconstrs+1:end]
     end
