@@ -44,7 +44,10 @@ SimpleSubProblem(costs, A, sense, b, vartypes, lb, ub, solver) = SimpleSubProble
 """
     solve_pricing implementation for SimpleSubProblem
 """
-function solve_pricing!(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
+function solve_pricing!(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
+
+    # dimension check
+    size(π, 1) == size(sp.costs, 1) || DimensionMismatch("π's dimension is $(size(π, 1)) but should be $(size(sp.costs, 1))")
 
     # form perturbed objective for the sub-problem
     if farkas_pricing
@@ -71,7 +74,7 @@ function solve_pricing!(sp::SimpleSubProblem, π, σ, farkas_pricing=false)
     # get column
     col = result.sol  # column
     cost = dot(sp.costs, col)  # native cost
-    rc = result.objval - σ  # reduced cost
+    rc = result.objval - σ[1]  # reduced cost
 
     # check that reduced cost is indeed negative
     if rc < - 10.0^-6  # default solver tolerance for reduced costs
@@ -115,7 +118,7 @@ function SimpleMasterProblem(
     A::AbstractMatrix{N1},
     senses::AbstractVector{Char},
     b::AbstractVector{N2},
-    solver::MathProgBase.AbstractMathProgSolver
+    solver::MathProgBase.AbstractMathProgSolver,
     sp::ST
 ) where {N1<:Number, N2<:Number, ST<:AbstractSubProblem}
 
