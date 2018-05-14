@@ -174,7 +174,7 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
         σ = dualsolution[nlinkingconstrs+1:end]
     end
 
-    return (rmp_status, π, σ)
+    return MasterSolution(rmp_status, π, σ)
 end
 
 function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) where ST<:AbstractSubProblem

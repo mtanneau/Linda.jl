@@ -10,16 +10,36 @@
 abstract type AbstractMasterProblem{ST<:AbstractSubProblem} end
 
 """
+    MasterSolution
+    Current primal-dual iterate in the master
+"""
+mutable struct MasterSolution
+
+    # status of the Restricted Master Problem
+    status::AbstractStatus
+
+    # current dual iterate
+    π::AbstractVector{Real}
+    σ::AbstractVector{Real}
+
+    # TODO: store primal iterate
+    #   best is probably to store current basis
+
+    # TODO: dual (Lagrange) bound, best upper bound (integer), best solution...
+
+end
+
+"""
     compute_dual_variables! computes the next dual iterate,
     where pi is the dual variable associated to linking constraints,
     and sigma is associated to the convexity constraint.
 """
 function compute_dual_variables!(mp::AbstractMasterProblem)
     warn("Implement compute_dual_variables! for concrete MasterProblem types")
-    status = StatusError()
+    rmp_status = StatusError()
     π = zeros(0,)
     σ = zeros(1,)
-    return (status, π, σ)
+    return MasterSolution(rmp_status, π, σ)
 end
 
 """
@@ -59,15 +79,15 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         # iter, number of columns, primal/dual bounds, etc...
 
         # I. Dual update
-        (rmp_status, π, σ) = compute_dual_variables!(mp)
-        if !ok(rmp_status)
+        rmp_sol = compute_dual_variables!(mp)
+        if !ok(rmp_sol.status)
             # exit if problem encountered during dual update
-            warn("RMP status $(rmp_status) currently not handled, terminate")
-            return rmp_status
+            warn("RMP status $(rmp_sol.status) currently not handled, terminate")
+            return rmp_sol.status
         end
 
         # II. Pricing step
-        pricingresult = solve_pricing(sp, π, σ)
+        pricingresult = solve_pricing(sp, rmp_sol.π, rmp_sol.σ)
         # check pricing status
         if isinfeasible(pricingresult.status)
             # sub-problem is infeasible: problem is infeasible
