@@ -72,11 +72,17 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
     newcols = 0  # number of columns added to the master problem
     ncgiter = 0  # number of Column Generation iterations
 
+    # Display log
+    println("  Iter     ncols")
+
     while newcols < maxcols
 
         ncgiter += 1
         # TODO: display relevant info, e.g.:
         # iter, number of columns, primal/dual bounds, etc...
+        print(@sprintf("%6d", ncgiter))
+        print(@sprintf("%10d", newcols))
+        println()
 
         # I. Dual update
         rmp_sol = compute_dual_variables!(mp)

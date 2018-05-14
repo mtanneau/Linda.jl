@@ -7,9 +7,10 @@ import MathProgBase
 
 import Linda:
     AbstractSubProblem, AbstractMasterProblem, Column, PricingResult, MasterSolution,
-    compute_dual_variables, subproblem, add_columns, solve,
-    solve_pricing,
-    find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok, isinfeasible
+    find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok, isinfeasible,
+    compute_dual_variables!, subproblem, add_columns!, solve!,
+    solve_pricing
+    
 
 export SimpleSubProblem, SimpleMasterProblem
 
@@ -76,6 +77,8 @@ function solve_pricing(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=fals
     # check that reduced cost is indeed negative
     if rc < - 10.0^-6  # default solver tolerance for reduced costs
         columns = [Column(cost, col, true, false)]
+        # println("\tPricing: found column, rc = $(rc)")
+        # println("\t\t", col)
     else
         columns = Column[]  # reduced cost is 0: return no column
     end
@@ -173,6 +176,9 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
         dualsolution = MathProgBase.getconstrduals(mp.rmp)
         π = (mp.A)' * dualsolution[1:nlinkingconstrs]  # project dual vector to original space
         σ = dualsolution[nlinkingconstrs+1:end]
+        # println("\tMaster: RMP solved to optimality")
+        # println("\t\tπ=", π)
+        # println("\t\tσ=", σ)
     end
 
     return MasterSolution(rmp_status, π, σ)
@@ -196,7 +202,7 @@ function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) wher
             # extreme ray
             constrcoeff = vcat(mp.A * column.col, [0.0])
         end
-        MathProgBase.addvar!(mp.rmp, constridx, constrcoeff, 0.0, Inf, col.cost)
+        MathProgBase.addvar!(mp.rmp, constridx, constrcoeff, 0.0, Inf, column.cost)
         column.isactive = true
     end
     return ncolsadded
