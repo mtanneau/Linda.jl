@@ -40,7 +40,7 @@ end
 """
     solve_pricing implementation for SimpleSubProblem
 """
-function solve_pricing!(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
+function solve_pricing(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
 
     # dimension check
     size(π, 1) == size(sp.costs, 1) || DimensionMismatch("π's dimension is $(size(π, 1)) but should be $(size(sp.costs, 1))")
@@ -62,7 +62,7 @@ function solve_pricing!(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=fal
     # get solution
     if !ok(sp_status)
         # Error when solving sub-problem: return no column
-        return PricingStatus(sp_status, Column[])
+        return PricingResult(sp_status, Column[])
         # TODO: handle unbounded sub-problem
         #   In this case, a (primal) extreme ray is added to the master problem
     end
@@ -79,7 +79,7 @@ function solve_pricing!(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=fal
         columns = Column[]  # reduced cost is 0: return no column
     end
 
-    return PricingStatus(sp_status, columns)
+    return PricingResult(sp_status, columns)
 end
 
 """
@@ -101,7 +101,7 @@ end
     SimpleMasterProblem
     Concrete implementation of MasterProblem.
 """
-mutable struct SimpleMasterProblem{ST<:AbstractSubProblem} where {N1<:Number,N2<:Number}
+mutable struct SimpleMasterProblem{ST<:AbstractSubProblem,N1<:Number,N2<:Number} <: AbstractMasterProblem{ST}
     A::AbstractMatrix{N1}  # constraint matrix in original formulation
     b::AbstractVector{N2}  # right-hand side of linkin constraints
 
@@ -181,7 +181,7 @@ function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) wher
     ncols = size(columns, 1)
     ncolsadded = 0
 
-    constridx = collect(1:(1+size(mp.A, 1))  # assume only one sub-problem
+    constridx = collect(1:(1+size(mp.A, 1)))  # assume only one sub-problem
     for column in columns
         # add column (assumed to have negative reduced cost)
         if column.isactive
