@@ -6,7 +6,8 @@ module SimpleProblem
 import MathProgBase
 
 import Linda:
-    AbstractSubProblem, AbstractMasterProblem, Column, PricingResult,
+    AbstractSubProblem, AbstractMasterProblem, Column, PricingResult, MasterSolution,
+    compute_dual_variables, subproblem, add_columns, solve,
     solve_pricing,
     find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok, isinfeasible
 
