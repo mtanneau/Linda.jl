@@ -33,10 +33,7 @@ mutable struct SimpleSubProblem{N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real} <:
     lb::AbstractVector{N4}
     ub::AbstractVector{N5}
     solver::MathProgBase.AbstractMathProgSolver
-    columns::AbstractVector{Column}  # pool of columns
 end
-
-SimpleSubProblem(costs, A, sense, b, vartypes, lb, ub, solver) = SimpleSubProblem(costs, A, sense, b, vartypes, lb, ub, solver, Column[])
 
 # TODO build convenient constructor functions for SimpleSubProblem
 
