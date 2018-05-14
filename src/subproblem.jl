@@ -11,10 +11,8 @@ abstract type AbstractSubProblem end
     generated (if any).
 """
 struct PricingResult
-
     status::AbstractStatus  # return status of the sub-problem
-    columns::Array{Column, 1}  # columns generated during pricing
-
+    columns::Vector{Column}  # columns generated during pricing
 end
 
 """
@@ -33,7 +31,7 @@ function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = fal
     
     warn("Implement solve_pricing for concrete SubProblem types")
     status = StatusError()
-    columns = Array{Column, 1}()  # empty set of columns
+    columns = Column[]  # empty set of columns
 
     return PricingResult(status, columns)
 end

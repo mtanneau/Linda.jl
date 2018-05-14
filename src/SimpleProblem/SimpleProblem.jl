@@ -33,11 +33,10 @@ mutable struct SimpleSubProblem{N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real} <:
     lb::AbstractVector{N4}
     ub::AbstractVector{N5}
     solver::MathProgBase.AbstractMathProgSolver
-
-    columns::Array{Column, 1}  # pool of columns
+    columns::AbstractVector{Column}  # pool of columns
 end
 
-SimpleSubProblem(costs, A, sense, b, vartypes, lb, ub, solver) = SimpleSubProblem(costs, A, sense, b, vartypes, lb, ub, solver, Array{Column, 1}())
+SimpleSubProblem(costs, A, sense, b, vartypes, lb, ub, solver) = SimpleSubProblem(costs, A, sense, b, vartypes, lb, ub, solver, Column[])
 
 # TODO build convenient constructor functions for SimpleSubProblem
 
@@ -66,7 +65,7 @@ function solve_pricing!(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=fal
     # get solution
     if !ok(sp_status)
         # Error when solving sub-problem: return no column
-        return PricinStatus(sp_status, Array{Column, 1}())
+        return PricinStatus(sp_status, Column[])
         # TODO: handle unbounded sub-problem
         #   In this case, a (primal) extreme ray is added to the master problem
     end
@@ -80,7 +79,7 @@ function solve_pricing!(sp::SimpleSubProblem, π::V1, σ::V2, farkas_pricing=fal
     if rc < - 10.0^-6  # default solver tolerance for reduced costs
         columns = [Column(cost, col, true, false)]
     else
-        columns = Array{Column, 1}()  # reduced cost is 0: return no column
+        columns = Column[]  # reduced cost is 0: return no column
     end
 
     return PricinStatus(sp_status, columns)
@@ -181,7 +180,7 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
     return (rmp_status, π, σ)
 end
 
-function add_columns!(mp::SimpleMasterProblem{ST}, columns::Array{Column, 1}) where ST<:AbstractSubProblem
+function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) where ST<:AbstractSubProblem
     ncols = size(columns, 1)
     ncolsadded = 0
 

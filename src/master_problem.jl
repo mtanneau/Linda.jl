@@ -32,7 +32,7 @@ function subproblem(::AbstractMasterProblem) end
     add_columns! is used to (validate and) add columns and
     corresponding costs to the restricted master problem
 """
-function add_columns!(::AbstractMasterProblem, columns::Array{Column, 1})
+function add_columns!(::AbstractMasterProblem, columns::Vector{Column})
     warn("Implement add_columns! for concrete MasterProblem types")
     return 0
 end
