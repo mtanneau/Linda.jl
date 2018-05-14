@@ -12,6 +12,18 @@ abstract type AbstractStatus end
 ok(::AbstractStatus) = true
 
 """
+    isinfeasible indicates whether infeasibility was detected
+"""
+isinfeasible(::AbstractStatus) = false
+
+
+#===========
+#
+#   Concrete status types
+#
+===========#
+
+"""
     StatusOptimal is returned if a problem is solved to proven optimality.
 """
 struct StatusOptimal <: AbstractStatus end
@@ -25,6 +37,7 @@ ok(::StatusOptimal) = true
 """
 struct StatusInfeasible <: AbstractStatus end
 ok(::StatusInfeasible) = false
+isinfeasible(::StatusInfeasible) = true
 
 """
     StatusFeasible is returned when a feasible solution is found, but optimality
