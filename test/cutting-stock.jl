@@ -13,8 +13,14 @@ knapsack_problem = SimpleProblem.SimpleSubProblem(
 )
 
 master_problem = SimpleProblem.SimpleMasterProblem{SimpleProblem.SimpleSubProblem}(
-    # TODO: what order of elements
+    A, senses, b, CbcSolver(), knapsack_problem
 )
+
+    A::AbstractMatrix{N1},
+    senses::AbstractVector{Char},
+    b::AbstractVector{N2},
+    solver::MathProgBase.AbstractMathProgSolver,
+    sp::ST
 
 result_status = solve!(master_problem, maxcols = 1000)
 @test result_status == Linda.StatusOptimal()
