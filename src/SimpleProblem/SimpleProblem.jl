@@ -101,22 +101,24 @@ end
     SimpleMasterProblem
     Concrete implementation of MasterProblem.
 """
-mutable struct SimpleMasterProblem{ST<:AbstractSubProblem,N1<:Number,N2<:Number} <: AbstractMasterProblem{ST}
-    A::AbstractMatrix{N1}  # constraint matrix in original formulation
-    b::AbstractVector{N2}  # right-hand side of linkin constraints
+mutable struct SimpleMasterProblem{ST<:AbstractSubProblem,N1<:Number,N2<:Number,M<:AbstractMatrix{N1},V<:AbstractVector{N2}} <: AbstractMasterProblem{ST}
+    A::M  # constraint matrix in original formulation
+    b::V  # right-hand side of linkin constraints
 
     rmp::MathProgBase.AbstractLinearQuadraticModel  # restricted Master Problem
     sp::ST  # sub-problem
+    SimpleMasterProblem(A::M,b::V,rmp::MathProgBase.AbstractLinearQuadraticModel,sp::ST) where {ST<:AbstractSubProblem,N1<:Number,N2<:Number,M<:AbstractMatrix{N1},V<:AbstractVector{N2}} =
+        new{ST,N1,N2,M,V}(A,b,rmp,sp)
 end
 
 # TODO build convenient constructor functions for SimpleMasterProblem
 function SimpleMasterProblem(
-    A::AbstractMatrix{N1},
-    senses::AbstractVector{Char},
-    b::AbstractVector{N2},
+    A::M,
+    senses::V1,
+    b::V2,
     solver::MathProgBase.AbstractMathProgSolver,
     sp::ST
-) where {N1<:Number, N2<:Number, ST<:AbstractSubProblem}
+) where {N1<:Number, N2<:Number, M<:AbstractMatrix{N1},V1<:AbstractVector{Char},V2<:AbstractVector{N2},ST<:AbstractSubProblem}
 
     # dimension check
     nlinkingconstrs = size(A, 1)  # number of linking constraints
