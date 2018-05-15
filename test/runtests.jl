@@ -12,6 +12,7 @@ const testdir = dirname(@__FILE__)
 
 const test_files = [
     "simple_subproblem",
+    "cutting-stock",
     # include test file name here (without .jl extension)
 ]
 

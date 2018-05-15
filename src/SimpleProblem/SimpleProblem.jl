@@ -193,12 +193,12 @@ function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) wher
             continue
         end
         ncolsadded += 1
-        if column.isvertex
+        constrcoeff = if column.isvertex
             # extreme vertex
-            constrcoeff = vcat(mp.A * column.col, [1.0])
+            vcat(mp.A * column.col, [1.0])
         else
             # extreme ray
-            constrcoeff = vcat(mp.A * column.col, [0.0])
+            vcat(mp.A * column.col, [0.0])
         end
         MathProgBase.addvar!(mp.rmp, constridx, constrcoeff, 0.0, Inf, column.cost)
         column.isactive = true
