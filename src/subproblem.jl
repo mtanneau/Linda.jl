@@ -6,7 +6,17 @@
 abstract type AbstractSubProblem end
 
 """
-    price performs the pricing of the current dual iterate, and returns a set
+    PricingResult stores relevant information following a pricing step,
+    including the return status of the sub-problem, and the columns that were
+    generated (if any).
+"""
+struct PricingResult
+    status::AbstractStatus  # return status of the sub-problem
+    columns::Vector{Column}  # columns generated during pricing
+end
+
+"""
+    solve_pricing performs the pricing of the current dual iterate, and returns a set
     of `N` columns, where `N` may be equal to zero.
     
     Arguments:
@@ -14,17 +24,14 @@ abstract type AbstractSubProblem end
     * `sigma` is the (vector of) dual variable(s) associated to convexity constraint(s)
     * `farkas_pricing` indicates whether to perform Farkas or regular pricing
     
-    Returns a tuple (status, costs, columns):
-    * `costs` is a N-dimensional vector that contains the native costs of
-        the generated columns.
-    * `columns` is a MxN matrix, that contains the `N` generated columns.
+    Returns:
     * `status` indicates the status of the subproblem, must be an AbstractStatus
 """
 function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
-    N = 0 # number of columns returned
-    costs = zeros(N,)
-    columns = zeros(2,N)
-    warn("Implement solve_pricing for the SubProblem")
+    
+    warn("Implement solve_pricing for concrete SubProblem types")
     status = StatusError()
-    return (status, costs, columns)
+    columns = Column[]  # empty set of columns
+
+    return PricingResult(status, columns)
 end
