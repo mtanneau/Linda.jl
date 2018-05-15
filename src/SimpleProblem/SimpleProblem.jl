@@ -111,6 +111,8 @@ mutable struct SimpleMasterProblem{ST<:AbstractSubProblem,N1<:Number,N2<:Number,
 
     rmp::MathProgBase.AbstractLinearQuadraticModel  # restricted Master Problem
     sp::ST  # sub-problem
+    SimpleMasterProblem(A::M,b::V,rmp::MathProgBase.AbstractLinearQuadraticModel,sp::ST) where {ST<:AbstractSubProblem,N1<:Number,N2<:Number,M<:AbstractMatrix{N1},V<:AbstractVector{N2}} =
+        new{ST,N1,N2,M,V}(A,b,rmp,sp)
 end
 
 # TODO build convenient constructor functions for SimpleMasterProblem
