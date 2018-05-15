@@ -15,8 +15,8 @@ knapsack_problem = SimpleProblem.SimpleSubProblem(
     CbcSolver()
 )
 
-master_problem = SimpleProblem.SimpleMasterProblem{SimpleProblem.SimpleSubProblem}(
-    initial_cols, ['>' for _ in 1:NW], b, CbcSolver(), knapsack_problem
+master_problem = SimpleProblem.SimpleMasterProblem(
+    initial_cols, ['>' for _ in 1:NW], demand, ClpSolver(), knapsack_problem
 )
 
 result_status = solve!(master_problem, maxcols = 1000)
