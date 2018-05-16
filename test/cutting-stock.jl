@@ -8,22 +8,57 @@ const NW = length(widths)
 initial_cols = [i!=j?0: floor(Int,maxwidth//widths[i]) for i=1:NW,j=1:NW]
 
 knapsack_problem = SimpleProblem.SimpleSubProblem(
-    -prices, hcat(widths)', ['<'], [maxwidth],
-    [:Int for _ in 1:NW], 
-    spzeros(Int,NW,),
+    -zeros(NW,), hcat(widths)', ['<'], [maxwidth],
+    [:Int for _ in 1:NW],
+    zeros(Int,NW,),
     [floor(Int,maxwidth/widths[i]) for i in 1:NW],
     CbcSolver()
 )
 
-master_problem = SimpleProblem.SimpleMasterProblem(
-    initial_cols, ['>' for _ in 1:NW], demand, ClpSolver(), knapsack_problem
-)
+mutable struct CuttingWidthMaster{SP<:SimpleProblem.SimpleSubProblem} <: Linda.AbstractMasterProblem{SP}
+    current_cols::Matrix{Int64}
+    current_costs::Vector{Float64}
+    demand::Vector{Int64}
+    sp::SP
+    solver::ClpSolver
+end
 
-result_status = solve!(master_problem, maxcols = 1000)
-@test result_status == Linda.StatusOptimal()
-cols = master_problem.columns
+# implement interface
+Linda.subproblem(cw::CuttingWidthMaster) = cw.sp
+
+function Linda.add_columns!(cw::CuttingWidthMaster,columns::Vector{Linda.Column})
+    for col in columns
+        cw.current_cols = hcat(cw.current_cols,[round(Int,a) for a in col.col])
+        push!(cw.current_costs,1.0)
+    end
+    return length(columns)
+end
+
+function Linda.compute_dual_variables!(cw::CuttingWidthMaster)
+    nwidths = size(cw.current_cols)[1]
+    result = MathProgBase.linprog(
+        cw.current_costs, cw.current_cols, '>', cw.demand, cw.solver
+    )
+    status = Linda.find_status(result.status)
+    return Linda.MasterSolution(status, -result.attrs[:lambda], [1.0])
+end
+
+cw = CuttingWidthMaster(initial_cols,ones(NW,),demand,knapsack_problem,ClpSolver())
+
 include("ref_columns.jl")
-@test all(cols.==patterns)
-
-excess_rolls = round(Int,master_problem.columns * master_problem.solution - demand)
+result_status = Linda.solve!(cw, maxcols = 1000)
+@test result_status == Linda.StatusOptimal()
 @test all(excess_rolls.==ref_excess)
+
+# master_problem = SimpleProblem.SimpleMasterProblem(
+#     initial_cols, ['>' for _ in 1:NW], demand, ClpSolver(), knapsack_problem
+# )
+
+# result_status = solve!(master_problem, maxcols = 1000)
+# @test result_status == Linda.StatusOptimal()
+# cols = master_problem.columns
+# include("ref_columns.jl")
+# @test all(cols.==patterns)
+
+# excess_rolls = round(Int,master_problem.columns * master_problem.solution - demand)
+# @test all(excess_rolls.==ref_excess)
