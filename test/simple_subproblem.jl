@@ -1,6 +1,8 @@
 import Linda.SimpleProblem
 
-A = [
+A_link = eye(2)
+
+A_sub = [
     1 1
     1 2
 ]
@@ -10,8 +12,8 @@ c = [-1;-1]
 sense = ['<','<']
 vartypes = [:Int,:Int]
 
-sp = Linda.SimpleProblem.SimpleSubProblem(c,A,['<','<'],b, vartypes, [0,0],[Inf,Inf],CbcSolver())
-presult = Linda.solve_pricing(sp,[0.0;0.0],[0.0])
+sp = Linda.SimpleProblem.SimpleSubProblem(c, A_link, A_sub, ['<','<'], b, vartypes, [0,0], [Inf,Inf], CbcSolver())
+presult = Linda.solve_pricing(sp, [0.0;0.0], [0.0])
 @test presult.status == Linda.StatusOptimal()
 @test size(presult.columns) == (1,)
 # @test size(columns) == (2,1)
