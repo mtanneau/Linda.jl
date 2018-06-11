@@ -30,6 +30,8 @@ mutable struct SimpleSubProblem{N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real,N6<
     problemidx::Integer # Sub-problem's number
 end
 
+SimpleSubProblem(c, A_link, A_sub, senses, b, vartypes, lb, ub, solver) = SimpleSubProblem(c, A_link, A_sub, senses, b, vartypes, lb, ub, solver, 1)
+
 getprobindex(sp::SimpleSubProblem) = sp.problemidx
 
 # TODO build convenient constructor functions for SimpleSubProblem

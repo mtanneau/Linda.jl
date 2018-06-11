@@ -11,6 +11,7 @@ mutable struct SimpleMasterProblem{ST<:AbstractSubProblem, N1<:Real, V<:Abstract
     #==================================================
         Master Problem
     ==================================================#
+
     numcon_link::Int    # Number of linking constraints
     b::V                # Right-hand side of linking constraints
     rmp::MPB.AbstractLinearQuadraticModel  # restricted Master Problem
@@ -19,13 +20,15 @@ mutable struct SimpleMasterProblem{ST<:AbstractSubProblem, N1<:Real, V<:Abstract
     #==================================================
         Sub-Problem
     ==================================================#
-    num_sp::Int             # Number of sub-problems
-    subproblems::Vector{ST}  # Sub-problems
+
+    num_sp::Int                 # Number of sub-problems
+    subproblems::Vector{ST}     # Sub-problems
 
 
     #==================================================
         Constructor
     ==================================================#
+    
     SimpleMasterProblem(
         b::V,
         rmp::MPB.AbstractLinearQuadraticModel,
