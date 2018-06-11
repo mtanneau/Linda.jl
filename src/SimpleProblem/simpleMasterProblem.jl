@@ -19,8 +19,8 @@ mutable struct SimpleMasterProblem{ST<:AbstractSubProblem, N1<:Real, V<:Abstract
     #==================================================
         Sub-Problem
     ==================================================#
-    num_sp::Int     # Number of sub-problems
-    sp::ST  # Sub-problems
+    num_sp::Int             # Number of sub-problems
+    subproblems::Vector{ST}  # Sub-problems
 
 
     #==================================================
@@ -29,9 +29,9 @@ mutable struct SimpleMasterProblem{ST<:AbstractSubProblem, N1<:Real, V<:Abstract
     SimpleMasterProblem(
         b::V,
         rmp::MPB.AbstractLinearQuadraticModel,
-        sp::ST
+        sp::Vector{ST}
     ) where {ST<:AbstractSubProblem, N1<:Real, V<:AbstractVector{N1}} =
-        new{ST,N1,V}(size(b, 1), b, rmp, num_subproblems(sp), sp)
+        new{ST,N1,V}(size(b, 1), b, rmp, size(sp, 1), sp)
 end
 
 # TODO build convenient constructor functions for SimpleMasterProblem
@@ -39,7 +39,7 @@ function SimpleMasterProblem(
     b::V,
     senses::Vector{Char},
     solver::MPB.AbstractMathProgSolver,
-    sp::ST
+    sp::Vector{ST}
 ) where {N1<:Real, V<:AbstractVector{N1},ST<:AbstractSubProblem}
 
     # dimension check
@@ -75,9 +75,7 @@ end
 
 returns the SubProblem object
 """
-function subproblem(mp::SimpleMasterProblem{ST}) where {ST<:AbstractSubProblem}
-    return mp.sp
-end
+get_subproblems(mp::SimpleMasterProblem) = mp.subproblems
 
 """
     compute_dual_variables!(::SimpleMasterProblem)
@@ -91,7 +89,6 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
     rmp_status = find_status(MPB.status(mp.rmp))
 
     # check RMP status
-    nlinkingconstrs = size(mp.b, 1)
     if !ok(rmp_status)
         # unexpected status when solving RMP
         # TODO: handle dual unboundedness in RMP
@@ -100,8 +97,8 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
     else
         # RMP solved to optimality
         dualsolution = MPB.getconstrduals(mp.rmp)
-        π = dualsolution[1:nlinkingconstrs]
-        σ = dualsolution[nlinkingconstrs+1:end]
+        π = dualsolution[1:mp.numcon_link]
+        σ = dualsolution[mp.numcon_link+1:end]
     end
 
     return MasterSolution(rmp_status, π, σ)

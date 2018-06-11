@@ -50,7 +50,9 @@ end
 Return the subproblem attached to a master.
 To be defined in the implementation
 """
-function subproblem(::AbstractMasterProblem) end
+function get_subproblems(::AbstractMasterProblem)
+    return Vector{AbstractSubProblem}(0)
+end
 
 """
     add_columns! is used to (validate and) add columns and
@@ -74,7 +76,8 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
     # TODO: initialize restricted master (e.g. artificial variables)
     # TODO: heuristic hotstart
 
-    sp = subproblem(mp)
+    subproblems = get_subproblems(mp)
+    println("MP has $(size(subproblems)) sub-problems")
     newcols = 0  # number of columns added to the master problem
     ncgiter = 0  # number of Column Generation iterations
 
@@ -89,8 +92,11 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         print(@sprintf("%6d", ncgiter))
         print(@sprintf("%10d", newcols))
         println()
+        
+        #===============================================
+            I. Dual update
+        ===============================================#
 
-        # I. Dual update
         rmp_sol = compute_dual_variables!(mp)
         if !ok(rmp_sol.status)
             # exit if problem encountered during dual update
@@ -98,30 +104,45 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
             return rmp_sol.status
         end
 
-        # II. Pricing step
-        pricingresult = solve_pricing(sp, rmp_sol.π, rmp_sol.σ)
-        # check pricing status
-        if isinfeasible(pricingresult.status)
-            # sub-problem is infeasible: problem is infeasible
-            warn("Infeasible sub-problem: problem is infeasible")
-            return StatusInfeasible()
 
-        elseif !ok(pricingresult.status)
-            # Early return caused by error when solving sub-problem
-            # TODO: expand handling of return status
-            warn("Pricing status $(res_pricing.sp_status) currently not handled, terminate")
-            return pricingresult.status
+        #===============================================
+            II. Pricing step
+        ===============================================#
+
+        # Default: solve all sub-problems
+        ncolsadded = 0
+        for sp in subproblems
+
+            idx_prob = getprobindex(sp)
+            pricingresult = solve_pricing(sp, rmp_sol.π, rmp_sol.σ[idx_prob])
+
+            # check pricing status
+            if isinfeasible(pricingresult.status)
+                # sub-problem is infeasible: problem is infeasible
+                warn("Infeasible sub-problem: problem is infeasible")
+                return StatusInfeasible()
+            elseif !ok(pricingresult.status)
+                # Early return caused by error when solving sub-problem
+                # TODO: expand handling of return status
+                warn("Pricing status $(res_pricing.sp_status) currently not handled, terminate")
+                return pricingresult.status
+            end
+
+            ncolsadded += add_columns!(mp, pricingresult.columns)
         end
 
-        # III. Update Master formulation
-        if length(pricingresult.columns) == 0
+
+        #===============================================
+            III. Update Restricted Master Problem
+        ===============================================#
+
+        if ncolsadded == 0
             # no columns added: current solution is optimal
             # TODO: handle case where no columns are generated after heuristic solve
             return StatusOptimal()
-        end
-
-        ncolsadded = add_columns!(mp, pricingresult.columns)
+        end        
         newcols += ncolsadded
+
     end
     return StatusTimeout()
 end

@@ -12,7 +12,7 @@ A concrete implementation of AbstractSubProblem
 -`vartypes::AbstractVector{Symbol}`: variables' types
 -`lb::AbstractVector{Real}`: lower bounds on the original variables
 -`ub::AbstractVector{Real}`: upper bounds on the original variables
--`solver::MathProgBase.AbstractMathProgSolver`: solver for the sub-problem
+-`solver::MPB.AbstractMathProgSolver`: solver for the sub-problem
 """
 mutable struct SimpleSubProblem{N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real,N6<:Real} <: AbstractSubProblem
     
@@ -25,19 +25,19 @@ mutable struct SimpleSubProblem{N1<:Real,N2<:Real,N3<:Real,N4<:Real,N5<:Real,N6<
     vartypes::AbstractVector{Symbol}
     lb::AbstractVector{N5}
     ub::AbstractVector{N6}
-    solver::MathProgBase.AbstractMathProgSolver
+    solver::MPB.AbstractMathProgSolver
 
     problemidx::Integer # Sub-problem's number
 end
 
-num_subproblems(sp::SimpleSubProblem) = 1
+getprobindex(sp::SimpleSubProblem) = sp.problemidx
 
 # TODO build convenient constructor functions for SimpleSubProblem
 
 """
     solve_pricing implementation for SimpleSubProblem
 """
-function solve_pricing(sp::SimpleSubProblem, π::AbstractVector{N1}, σ::AbstractVector{N2}, farkas_pricing=false) where {N1<:Real, N2<:Real}
+function solve_pricing(sp::SimpleSubProblem, π::AbstractVector{N1}, σ::Real, farkas_pricing=false) where {N1<:Real}
 
     # dimension check
     size(π, 1) == size(sp.A_link, 1) || DimensionMismatch("π's dimension is $(size(π, 1)) but should be $(size(sp.A_link, 1))")
@@ -50,7 +50,7 @@ function solve_pricing(sp::SimpleSubProblem, π::AbstractVector{N1}, σ::Abstrac
     end
 
     # solve sub-problem
-    result = MathProgBase.mixintprog(
+    result = MPB.mixintprog(
         obj_,
         sp.A_sub, sp.senses, sp.b, sp.vartypes, sp.lb, sp.ub, sp.solver
     )
@@ -65,9 +65,9 @@ function solve_pricing(sp::SimpleSubProblem, π::AbstractVector{N1}, σ::Abstrac
     end
     
     # get column
-    col = result.sol  # column
-    cost = dot(sp.costs, col)  # native cost
-    rc = result.objval - σ[1]  # reduced cost
+    col = result.sol            # Column
+    cost = dot(sp.costs, col)   # Native cost
+    rc = result.objval - σ      # Reduced cost
 
     # check that reduced cost is indeed negative
     if rc < - 10.0^-6  # default solver tolerance for reduced costs

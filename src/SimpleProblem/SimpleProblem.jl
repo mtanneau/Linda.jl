@@ -9,11 +9,11 @@ const MPB = MathProgBase
 import Linda:
     AbstractSubProblem, AbstractMasterProblem, Column, PricingResult, MasterSolution,
     find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok, isinfeasible,
-    compute_dual_variables!, subproblem, add_columns!, solve!,
-    solve_pricing
+    compute_dual_variables!, get_subproblems, add_columns!, solve!,
+    solve_pricing, getprobindex
     
 
-export SimpleSubProblem, SimpleMasterProblem
+export SimpleSubProblem, SimpleMasterProblem, MultiSubProblem
 
 include("./simpleSubProblem.jl")
 include("./simpleMasterProblem.jl")
