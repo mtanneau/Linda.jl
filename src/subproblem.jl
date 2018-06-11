@@ -16,6 +16,16 @@ struct PricingResult
 end
 
 """
+    num_subproblems
+
+Return number of (independant) sub-problems.
+"""
+function num_subproblems(::AbstractSubProblem)
+    warn("Implement num_subproblems for concrete SubProblem types")
+    return 0
+end
+
+"""
     solve_pricing performs the pricing of the current dual iterate, and returns a set
     of `N` columns, where `N` may be equal to zero.
     

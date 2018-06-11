@@ -30,9 +30,11 @@ mutable struct MasterSolution
 end
 
 """
-    compute_dual_variables! computes the next dual iterate,
-    where pi is the dual variable associated to linking constraints,
-    and sigma is associated to the convexity constraint.
+    compute_dual_variables!
+    
+Computes the next dual iterate,
+where `pi` is the dual variable associated to linking constraints,
+and `sigma` is associated to the convexity constraint.
 """
 function compute_dual_variables!(mp::AbstractMasterProblem)
     warn("Implement compute_dual_variables! for concrete MasterProblem types")
@@ -43,14 +45,17 @@ function compute_dual_variables!(mp::AbstractMasterProblem)
 end
 
 """
-    subproblem returns the subproblem attached to a master
-    to define in the implementation
+    subproblem 
+
+Return the subproblem attached to a master.
+To be defined in the implementation
 """
 function subproblem(::AbstractMasterProblem) end
 
 """
     add_columns! is used to (validate and) add columns and
-    corresponding costs to the restricted master problem
+    
+corresponding costs to the restricted master problem
 """
 function add_columns!(::AbstractMasterProblem, columns::Vector{Column})
     warn("Implement add_columns! for concrete MasterProblem types")
@@ -59,9 +64,10 @@ end
 
 """
     solve! has a default version for any MasterProblem
-    It adds column(s) to the restricted master while a new solution can be found
-    in the subproblem. `maxcols` can be used to limit the number of
-    new columns computed
+    
+It adds column(s) to the restricted master while a new solution can be found
+in the subproblem. `maxcols` can be used to limit the number of
+new columns computed
 """
 function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
 
