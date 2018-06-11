@@ -1,5 +1,6 @@
 """
     SimpleSubProblem
+
 A concrete implementation of AbstractSubProblem
 
 # Attributes

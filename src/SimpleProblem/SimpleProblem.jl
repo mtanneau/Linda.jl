@@ -12,8 +12,8 @@ import Linda:
     compute_dual_variables!, get_subproblems, add_columns!, solve!,
     solve_pricing, getprobindex
     
+export SimpleSubProblem, SimpleMasterProblem
 
-export SimpleSubProblem, SimpleMasterProblem, MultiSubProblem
 
 include("./simpleSubProblem.jl")
 include("./simpleMasterProblem.jl")
