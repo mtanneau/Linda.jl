@@ -54,6 +54,9 @@ function SimpleMasterProblem(
     rmp = MPB.LinearQuadraticModel(solver)
 
     # create empty constraints with right-hand sides
+    for j in 1:num_sp
+        MPB.addconstr!(rmp, zeros(), zeros(), 1.0, 1.0)  # convexity constraints
+    end
     for j=1:numcon_link
         if senses[j] == '='
             MPB.addconstr!(rmp, [], [], b[j], b[j])
@@ -65,9 +68,7 @@ function SimpleMasterProblem(
             error("Invalid input: senses[$(j)]=$(senses[j])")
         end
     end
-    for j in 1:num_sp
-        MPB.addconstr!(rmp, zeros(), zeros(), 1.0, 1.0)  # convexity constraint
-    end
+
     
     return SimpleMasterProblem(numcon_link, b, rmp, num_sp, sp)
 end
@@ -100,8 +101,8 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
     else
         # RMP solved to optimality
         dualsolution = MPB.getconstrduals(mp.rmp)
-        π = dualsolution[1:mp.numcon_link]
-        σ = dualsolution[mp.numcon_link+1:end]
+        π = dualsolution[(mp.num_sp+1):end]
+        σ = dualsolution[1:mp.num_sp]
     end
 
     return MasterSolution(rmp_status, π, σ)
@@ -111,11 +112,11 @@ function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) wher
     ncols = size(columns, 1)
     ncolsadded = 0
 
-    constridx = collect(1:mp.numcon_link)
+    constridx = collect((mp.num_sp+1):(mp.numcon_link+mp.num_sp))
 
     for column in columns
         # add column (assumed to have negative reduced cost)
-        constridx_ = [constridx ; mp.numcon_link+column.problemidx]
+        constridx_ = [column.problemidx ; constridx]
         
         if column.isactive
             continue
@@ -123,10 +124,10 @@ function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) wher
         ncolsadded += 1
         if column.isvertex
             # extreme vertex
-            constrcoeff = vcat(column.col, [1.0])
+            constrcoeff = vcat([1.0], column.col)
         else
             # extreme ray
-            constrcoeff = vcat(column.col, [0.0])
+            constrcoeff = vcat([0.0], column.col)
         end
         MPB.addvar!(mp.rmp, constridx_, constrcoeff, 0.0, Inf, column.cost)
         column.isactive = true

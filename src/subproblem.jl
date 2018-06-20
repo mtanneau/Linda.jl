@@ -38,7 +38,7 @@ where `N` may be equal to zero.
 # Arguments:
 -`::AbstractSubProblem`: Sub-problem
 -`pi::AbstractVector{Real}`: Vector of dual variables (shadow prices)
--`sigma::Real`: Dual variable (shadow marginal cost) 
+-`sigma::Real`: Dual variable (shadow marginal cost)
 -`farkas_pricing::Bool`: Whether to perform Farkas or regular pricing
 
 # Returns:
