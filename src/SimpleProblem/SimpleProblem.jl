@@ -15,7 +15,7 @@ import Linda:
 export SimpleSubProblem, SimpleMasterProblem
 
 
-include("./simpleSubProblem.jl")
-include("./simpleMasterProblem.jl")
+include("simpleSubProblem.jl")
+include("simpleMasterProblem.jl")
 
 end  # module
