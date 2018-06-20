@@ -34,18 +34,20 @@ subproblems = [sp1, sp2]
 
 # create MasterProblem
 # instanciate RMP
+nsp = length(subproblems)
 rmp = MathProgBase.LinearQuadraticModel(ClpSolver())
-
-# add linking GUB constraint
-MathProgBase.addconstr!(rmp, [], [], -Inf, k)  # empty constraints (no variable)
 
 # add convexity constraint
 for sp in subproblems
     MathProgBase.addconstr!(rmp, [], [], 1.0, 1.0)
+end
+# add linking GUB constraint
+MathProgBase.addconstr!(rmp, [], [], -Inf, k)  # empty constraints (no variable)
 
+for sp in subproblems
     # initialize master with zero-valued column
     # in our case this column is feasible
-    MathProgBase.addvar!(rmp, [collect(1:m); (m+sp.problemidx)], [0., 1.], 0., Inf, 0.)
+    MathProgBase.addvar!(rmp, [(sp.problemidx) ; collect((nsp+1):(nsp+m))], [1.0, 0.], 0., Inf, 0.)
 end
 
 mp = Linda.SimpleProblem.SimpleMasterProblem(b, rmp, subproblems);
