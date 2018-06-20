@@ -40,7 +40,7 @@ getprobindex(sp::SimpleSubProblem) = sp.problemidx
 """
     solve_pricing implementation for SimpleSubProblem
 """
-function solve_pricing(sp::SimpleSubProblem, π::AbstractVector{N1}, σ::Real, farkas_pricing=false) where {N1<:Real}
+function solve_pricing!(sp::SimpleSubProblem, π::AbstractVector{N1}, σ::Real, farkas_pricing=false) where {N1<:Real}
 
     # dimension check
     size(π, 1) == size(sp.A_link, 1) || DimensionMismatch("π's dimension is $(size(π, 1)) but should be $(size(sp.A_link, 1))")

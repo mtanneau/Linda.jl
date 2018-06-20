@@ -45,7 +45,7 @@ where `N` may be equal to zero.
 -`result::PricingSTatus`: Optimization status for the sub-problem, and set of
     newly generated columns (if any)
 """
-function solve_pricing(
+function solve_pricing!(
     ::AbstractSubProblem,
     π::V1,
     σ::Real;

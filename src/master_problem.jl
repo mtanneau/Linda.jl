@@ -114,7 +114,7 @@ function solve!(mp::AbstractMasterProblem; maxcols::Integer = 5000)
         for sp in subproblems
 
             idx_prob = getprobindex(sp)
-            pricingresult = solve_pricing(sp, rmp_sol.π, rmp_sol.σ[idx_prob])
+            pricingresult = solve_pricing!(sp, rmp_sol.π, rmp_sol.σ[idx_prob])
 
             # check pricing status
             if isinfeasible(pricingresult.status)

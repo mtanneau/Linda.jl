@@ -10,7 +10,7 @@ import Linda:
     AbstractSubProblem, AbstractMasterProblem, Column, PricingResult, MasterSolution,
     find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok, isinfeasible,
     compute_dual_variables!, get_subproblems, add_columns!, solve!,
-    solve_pricing, getprobindex
+    solve_pricing!, getprobindex
     
 export SimpleSubProblem, SimpleMasterProblem
 

@@ -3,7 +3,7 @@ module Linda
 export AbstractSubProblem, AbstractMasterProblem, Column, PricingResult, MasterSolution,
     find_status, StatusError, StatusOptimal, StatusUnbounded, StatusInfeasible, ok, isinfeasible,
     compute_dual_variables!, subproblem, add_columns!, solve!,
-    solve_pricing
+    solve_pricing!
 
 
 # package code goes here
