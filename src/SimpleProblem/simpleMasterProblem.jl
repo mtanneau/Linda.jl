@@ -12,8 +12,8 @@ mutable struct SimpleMasterProblem{ST<:AbstractSubProblem, N1<:Real, V<:Abstract
         Master Problem
     ==================================================#
 
-    numcon_link::Int    # Number of linking constraints
-    b::V                # Right-hand side of linking constraints
+    num_constr_link::Int    # Number of linking constraints
+    b::V                    # Right-hand side of linking constraints
     rmp::MPB.AbstractLinearQuadraticModel  # restricted Master Problem
 
 
@@ -21,7 +21,7 @@ mutable struct SimpleMasterProblem{ST<:AbstractSubProblem, N1<:Real, V<:Abstract
         Sub-Problem
     ==================================================#
 
-    num_sp::Int                 # Number of sub-problems
+    num_subproblems::Int                 # Number of sub-problems
     subproblems::Vector{ST}     # Sub-problems
 
 
@@ -46,18 +46,18 @@ function SimpleMasterProblem(
 ) where {N1<:Real, V<:AbstractVector{N1},ST<:AbstractSubProblem}
 
     # dimension check
-    numcon_link = size(b, 1)  # number of linking constraints
-    numcon_link == size(senses, 1) || DimensionMismatch("")
-    num_sp = size(sp, 1)
+    num_constr_link = size(b, 1)  # number of linking constraints
+    num_constr_link == size(senses, 1) || DimensionMismatch("")
+    num_subproblems = size(sp, 1)
 
     # instanciate rmp
     rmp = MPB.LinearQuadraticModel(solver)
 
     # create empty constraints with right-hand sides
-    for j in 1:num_sp
+    for j in 1:num_subproblems
         MPB.addconstr!(rmp, zeros(), zeros(), 1.0, 1.0)  # convexity constraints
     end
-    for j=1:numcon_link
+    for j=1:num_constr_link
         if senses[j] == '='
             MPB.addconstr!(rmp, [], [], b[j], b[j])
         elseif senses[j] == '<'
@@ -70,7 +70,7 @@ function SimpleMasterProblem(
     end
 
     
-    return SimpleMasterProblem(numcon_link, b, rmp, num_sp, sp)
+    return SimpleMasterProblem(num_constr_link, b, rmp, num_subproblems, sp)
 end
 
 
@@ -101,8 +101,8 @@ function compute_dual_variables!(mp::SimpleMasterProblem{ST}) where {ST<:Abstrac
     else
         # RMP solved to optimality
         dualsolution = MPB.getconstrduals(mp.rmp)
-        π = dualsolution[(mp.num_sp+1):end]
-        σ = dualsolution[1:mp.num_sp]
+        π = dualsolution[(mp.num_subproblems+1):end]
+        σ = dualsolution[1:mp.num_subproblems]
     end
 
     return MasterSolution(rmp_status, π, σ)
@@ -112,7 +112,7 @@ function add_columns!(mp::SimpleMasterProblem{ST}, columns::Vector{Column}) wher
     ncols = size(columns, 1)
     ncolsadded = 0
 
-    constridx = collect((mp.num_sp+1):(mp.numcon_link+mp.num_sp))
+    constridx = collect((mp.num_subproblems+1):(mp.num_constr_link+mp.num_subproblems))
 
     for column in columns
         # add column (assumed to have negative reduced cost)
