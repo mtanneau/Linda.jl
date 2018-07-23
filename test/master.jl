@@ -6,7 +6,7 @@ b = ones(m)
 
 import CPLEX: CplexSolver
 
-rmp = MPB.LinearQuadraticModel(CplexSolver(CPX_PARAM_SCRIND=0))
+rmp = MPB.LinearQuadraticModel(ClpSolver())
 # Convexity constraints
 for r in 1:R
     MPB.addconstr!(rmp, Vector{Float64}(), Vector{Float64}(), 1.0, 1.0)
