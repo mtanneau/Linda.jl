@@ -4,8 +4,6 @@ R = 1  # number of sub-problems
 
 b = ones(m)
 
-import CPLEX: CplexSolver
-
 rmp = MPB.LinearQuadraticModel(ClpSolver())
 # Convexity constraints
 for r in 1:R
