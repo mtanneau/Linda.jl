@@ -13,9 +13,8 @@ end
 const testdir = dirname(@__FILE__)
 
 const test_files = [
-    "simple_subproblem",
-    "simple_masterproblem",
     # include test file name here (without .jl extension)
+    "master"
 ]
 
 for f in test_files
