@@ -1,27 +1,6 @@
 import MathProgBase
 const MPB = MathProgBase
 
-include("column.jl")
-
-"""
-    ProblemStatus
-
-These status codes are based on those of MathOptInterface
-- `PrimalFeasible`: A primal feasible solution has been found
-- `DualFeasible` : A dual-feasible solution has been found
-- `PrimalDualFeasible`: A primal- and a dual-feasible solutions have been found
-- `Optimal`: A provably optimal solution has been found
-- `PrimalInfeasible`: Primal is proved to be infeasible
-- `PrimalUnbounded`: Problem is proved to be unbounded
-- `Unknown`: No feasible solution nor proof of infeasibility yet
-"""
-@enum ProblemStatus Unknown PrimalFeasible DualFeasible PrimalDualFeasible Optimal PrimalInfeasible PrimalUnbounded
-
-findStatus(::Symbol) = Unknown
-findStatus(::Type{Val{:Infeasible}}) = PrimalInfeasible
-findStatus(::Type{Val{:Unbounded}}) = PrimalUnbounded
-findStatus(::Type{Val{:Optimal}}) = Optimal
-
 """
     LindaMaster
 
@@ -42,12 +21,12 @@ mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
         - `num_columns_rmp`: current number of columns in the RMP, excluding
             artificial variables and columns that have been generated, but are 
             not currently in the RMP.
-        - `λ`: vector of primal variables, excluding artificial variables.
-            It is updated each time the RMP is modified.
+        - `active_columns`: Vector of active columns, to be updated every time a
+            column is added to / removed from the RMP
         
     =#
     num_columns_rmp::Int  # Number of columns currently in RMP
-    λ::Vector{Float64}    # Vector of primal variables (columns coefficients)
+    active_columns::Vector{Column}  # Active columns
 
     #=
         RMP Constraints
@@ -105,15 +84,14 @@ mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
     dual_bound::Float64   # Lagrange dual bound
     dual_bound_estimate::Float64  # Estimate of the Lagrange dual bound
 
-    column_pool::Vector{Column}  # Pool of all the generated columns
+    column_pool::Set{Column}  # Pool of all the generated columns
 
     # Create an empty Master
     function LindaMaster(
         rmp::RMP,
         num_constr_cvxty::Int,
         num_constr_link::Int,
-        rhs_constr_link::AbstractVector{Float64},
-        column_pool::Vector{Column}
+        rhs_constr_link::AbstractVector{Float64}
     ) where RMP<:MPB.AbstractLinearQuadraticModel
 
         # Dimension check
@@ -135,7 +113,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
         mp = new{RMP}()
 
         mp.num_columns_rmp = 0
-        mp.λ = Vector{Float64}(0)
+        mp.active_columns = Vector{Column}(0)
 
         mp.num_constr_cvxty = num_constr_cvxty
         mp.num_constr_link = num_constr_link
@@ -153,7 +131,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
         mp.dual_bound_estimate = -Inf
 
         # Initial pool of columns. These are not added to the RMP yet.
-        mp.column_pool = column_pool
+        mp.column_pool = Set{Column}()
 
         return mp
     end
@@ -209,10 +187,6 @@ function solve_rmp!(master::LindaMaster)
         master.primal_lp_bound = MPB.getobjval(master.rmp)
         master.mp_status = PrimalFeasible
 
-        # update current column coefficients
-        x = MPB.getsolution(master.rmp)
-        master.λ .= x[(2*master.num_constr_link+1):end]
-
         # update dual variables
         y = MPB.getconstrduals(master.rmp)
         master.σ .= y[1:master.num_constr_cvxty]
@@ -240,4 +214,43 @@ function solve_rmp!(master::LindaMaster)
     end
 
     return nothing
+end
+
+function add_columns!(master::LindaMaster, columns::Set{Column})
+    num_cols_added = 0
+    constr_link_idx = collect(
+        (master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)
+    )
+
+    for column in columns
+        
+        if column.is_in_rmp
+            # column is already in the RMP
+            continue
+        end
+
+        num_cols_added += 1
+        # add column to column pool
+        push!(master.column_pool, column)
+
+        # add column to RMP
+        constr_idx = [column.idx_subproblem ; constr_link_idx]
+        if column.is_vertex
+            # extreme vertex
+            constrcoeff = vcat([1.0], column.col)
+        else
+            # extreme ray
+            constrcoeff = vcat([0.0], column.col)
+        end
+        MPB.addvar!(master.rmp, constr_idx, constrcoeff, 0.0, Inf, column.cost)
+        
+        # update links
+        push!(master.active_columns, column)  # keep track of active columns
+        master.num_columns_rmp += 1
+        
+        column.is_in_rmp = true
+        column.idx_column = master.num_columns_rmp
+
+    end
+    return num_cols_added
 end
