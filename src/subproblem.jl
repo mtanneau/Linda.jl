@@ -1,33 +1,56 @@
 
 """
-    SubProblem is any optimization subproblem taking dual information π and σ
-    and building new columns as a matrix and . 
+    AbstractSubProblem 
+    
+Any optimization subproblem taking dual information π and σ to generate new
+columns.
 """
 abstract type AbstractSubProblem end
 
 """
-    PricingResult stores relevant information following a pricing step,
-    including the return status of the sub-problem, and the columns that were
-    generated (if any).
+    getprobindex(::AbstractSubProblem)
+
+Return index of sub-problem
+"""
+function getprobindex(::AbstractSubProblem)
+    warn("Implement getprobindex for concrete implementations")
+    return 1
+end
+
+
+"""
+    PricingResult 
+
+Holds relevant information following a pricing step, including the return status
+of the sub-problem, and the columns that were generated (if any).
 """
 struct PricingResult
-    status::AbstractStatus  # return status of the sub-problem
+    status::AbstractStatus   # return status of the sub-problem
     columns::Vector{Column}  # columns generated during pricing
 end
 
 """
-    solve_pricing performs the pricing of the current dual iterate, and returns a set
-    of `N` columns, where `N` may be equal to zero.
+    solve_pricing 
+
+Perform pricing for the current dual iterate, and return a set of `N` columns,
+where `N` may be equal to zero.
     
-    Arguments:
-    * `pi` is the vector of dual variables associated to linking constraints
-    * `sigma` is the (vector of) dual variable(s) associated to convexity constraint(s)
-    * `farkas_pricing` indicates whether to perform Farkas or regular pricing
-    
-    Returns:
-    * `status` indicates the status of the subproblem, must be an AbstractStatus
+# Arguments:
+-`::AbstractSubProblem`: Sub-problem
+-`pi::AbstractVector{Real}`: Vector of dual variables (shadow prices)
+-`sigma::Real`: Dual variable (shadow marginal cost)
+-`farkas_pricing::Bool`: Whether to perform Farkas or regular pricing
+
+# Returns:
+-`result::PricingSTatus`: Optimization status for the sub-problem, and set of
+    newly generated columns (if any)
 """
-function solve_pricing(::AbstractSubProblem, π::V1,σ::V2, farkas_pricing = false) where {V1<:AbstractVector{N1}, V2<:AbstractVector{N2}} where {N1<:Real, N2<:Real}
+function solve_pricing!(
+    ::AbstractSubProblem,
+    π::V1,
+    σ::Real;
+    farkas_pricing=false
+) where {V1<:AbstractVector{N1}} where {N1<:Real}
     
     warn("Implement solve_pricing for concrete SubProblem types")
     status = StatusError()
