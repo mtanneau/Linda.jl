@@ -35,15 +35,20 @@ end
 @test mp.num_columns_rmp == R
 @test MPB.numvar(mp.rmp) == 2*m + R
 
+
+# Solve RMP to optimality
 Linda.solve_rmp!(mp)
 
+@test mp.rmp_status == Linda.Optimal
+@test mp.mp_status == Linda.PrimalFeasible
 @test MPB.getobjval(mp.rmp) ≈ 1.0
 
-# Change right-hand side of RMP to make it infeasible
+# Infeasible RMP
+# (de-activate artificial variables and )
 MPB.setvarUB!(rmp, vcat(zeros(2*m), Inf*ones(R)))  # de-activate artificial vars
 MPB.setconstrLB!(rmp, vcat(ones(R), -ones(m)))
 MPB.setconstrUB!(rmp, vcat(ones(R), -ones(m)))
 mp.rhs_constr_link = -ones(m)
 
 Linda.solve_rmp!(mp)
-@test mp.rmp_status == Linda.ProblemStatus(5)  # RMP is primal infeasible
+@test mp.rmp_status == Linda.PrimalInfeasible  # RMP is primal infeasible
