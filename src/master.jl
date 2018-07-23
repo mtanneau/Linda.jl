@@ -192,7 +192,7 @@ function solve_rmp!(master::LindaMaster)
         master.σ .= y[1:master.num_constr_cvxty]
         master.π .= y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)]
     
-    elseif rmp_status == :PrimalInfeasible
+    elseif rmp_status == PrimalInfeasible
         # update primal bound
         master.primal_lp_bound = Inf
 
@@ -201,7 +201,7 @@ function solve_rmp!(master::LindaMaster)
         master.σ .= 0.0
         master.π .= y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)]
 
-    elseif rmp_status == :PrimalUnbounded
+    elseif rmp_status == PrimalUnbounded
         master.primal_bound = -Inf
         master.dual_bound = -Inf
 

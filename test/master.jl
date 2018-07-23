@@ -26,8 +26,24 @@ mp = Linda.LindaMaster(rmp, R, m, b)
 
 # Generate some columns
 for r in 1:R
-    col = Linda.Column(0.0, ones(m), true, false, r, 0)
+    col = Linda.Column(1.0, ones(m), true, false, r, 0)
+    Linda.add_columns!(mp, Set([col]))
+    # Add column again, this should not do anything
     Linda.add_columns!(mp, Set([col]))
 end
 
+@test mp.num_columns_rmp == R
+@test MPB.numvar(mp.rmp) == 2*m + R
+
 Linda.solve_rmp!(mp)
+
+@test MPB.getobjval(mp.rmp) ≈ 1.0
+
+# Change right-hand side of RMP to make it infeasible
+MPB.setvarUB!(rmp, vcat(zeros(2*m), Inf*ones(R)))  # de-activate artificial vars
+MPB.setconstrLB!(rmp, vcat(ones(R), -ones(m)))
+MPB.setconstrUB!(rmp, vcat(ones(R), -ones(m)))
+mp.rhs_constr_link = -ones(m)
+
+Linda.solve_rmp!(mp)
+@test mp.rmp_status == Linda.ProblemStatus(5)  # RMP is primal infeasible
