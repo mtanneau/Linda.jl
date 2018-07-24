@@ -12,7 +12,11 @@ These status codes are based on those of MathOptInterface
 """
 @enum ProblemStatus Unknown PrimalFeasible DualFeasible PrimalDualFeasible Optimal PrimalInfeasible PrimalUnbounded
 
-findStatus(::Symbol) = Unknown
+findStatus(::T) where T = Unknown
+findStatus(s::Symbol) = findStatus(Val{s})
+
+findStatus(i::Int) = ProblemStatus(i)
+
 findStatus(::Type{Val{:Infeasible}}) = PrimalInfeasible
 findStatus(::Type{Val{:Unbounded}}) = PrimalUnbounded
 findStatus(::Type{Val{:Optimal}}) = Optimal
