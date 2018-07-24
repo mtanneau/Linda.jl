@@ -140,10 +140,10 @@ end
 function solve!(master::LindaMaster; verbose=1)
 
     # Run-time initialization
-
+    n_cg_iter = 0
 
     # main CG loop
-    while master.num_columns_rmp < 10^4
+    while n_cg_iter < 100
 
         # Solve Restricted Master Problem to update dual variables
         solve_rmp!(master)
@@ -152,6 +152,7 @@ function solve!(master::LindaMaster; verbose=1)
         if verbose == 1
             println()
         end
+        n_cg_iter += 1
 
         # Look for early termination
         if master.mp_status == PrimalUnbounded
@@ -216,41 +217,54 @@ function solve_rmp!(master::LindaMaster)
     return nothing
 end
 
-function add_columns!(master::LindaMaster, columns::Set{Column})
-    num_cols_added = 0
+"""
+    add_column!(master, column)
+
+Add a column to the Master Problem.
+"""
+function add_column!(master::LindaMaster, column::Column)
+    
     constr_link_idx = collect(
         (master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)
     )
 
-    for column in columns
-        
-        if column.is_in_rmp
-            # column is already in the RMP
-            continue
-        end
-
-        num_cols_added += 1
-        # add column to column pool
-        push!(master.column_pool, column)
-
-        # add column to RMP
-        constr_idx = [column.idx_subproblem ; constr_link_idx]
-        if column.is_vertex
-            # extreme vertex
-            constrcoeff = vcat([1.0], column.col)
-        else
-            # extreme ray
-            constrcoeff = vcat([0.0], column.col)
-        end
-        MPB.addvar!(master.rmp, constr_idx, constrcoeff, 0.0, Inf, column.cost)
-        
-        # update links
-        push!(master.active_columns, column)  # keep track of active columns
-        master.num_columns_rmp += 1
-        
-        column.is_in_rmp = true
-        column.idx_column = master.num_columns_rmp
-
+    if column.is_in_rmp
+        # column is already in the RMP
+        return nothing
     end
-    return num_cols_added
+
+    # add column to column pool
+    push!(master.column_pool, column)
+
+    # add column to RMP
+    constr_idx = [column.idx_subproblem ; constr_link_idx]
+    if column.is_vertex
+        # extreme vertex
+        constrcoeff = vcat([1.0], column.col)
+    else
+        # extreme ray
+        constrcoeff = vcat([0.0], column.col)
+    end
+    MPB.addvar!(master.rmp, constr_idx, constrcoeff, 0.0, Inf, column.cost)
+    
+    # update links
+    push!(master.active_columns, column)  # keep track of active columns
+    master.num_columns_rmp += 1  # update number of columns in RMP
+    
+    column.is_in_rmp = true
+    column.idx_column = master.num_columns_rmp
+
+    return nothing
+end
+
+"""
+    add_columns!
+
+Add several columns to the Master Problem.
+"""
+function add_columns!(master::LindaMaster, columns)
+    for column in columns
+        add_column!(master, column)
+    end
+    return nothing
 end

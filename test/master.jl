@@ -27,9 +27,9 @@ mp = Linda.LindaMaster(rmp, R, m, b)
 # Generate some columns
 for r in 1:R
     col = Linda.Column(1.0, ones(m), true, false, r, 0)
-    Linda.add_columns!(mp, Set([col]))
+    Linda.add_column!(mp, col)
     # Add column again, this should not do anything
-    Linda.add_columns!(mp, Set([col]))
+    Linda.add_columns!(mp, [col])
 end
 
 @test mp.num_columns_rmp == R
