@@ -69,12 +69,11 @@ end
 
 # Make RMP infeasible
 # de-activate artificial variables
-MPB.setvarUB!(rmp, vcat(zeros(2*m), Inf*ones(mp.num_columns_rmp)))
+MPB.setvarUB!(mp.rmp, vcat(zeros(2*m), Inf*ones(mp.num_columns_rmp)))
 # Change right-hand side
-MPB.setconstrLB!(rmp, vcat(ones(R), -ones(m)))
-MPB.setconstrUB!(rmp, vcat(ones(R), -ones(m)))
+MPB.setconstrLB!(mp.rmp, vcat(ones(R), -ones(m)))
+MPB.setconstrUB!(mp.rmp, vcat(ones(R), -ones(m)))
 mp.rhs_constr_link = -ones(m)
 
 Linda.solve_rmp!(mp)
 @test mp.rmp_status == Linda.PrimalInfeasible  # RMP is primal infeasible
-=#
