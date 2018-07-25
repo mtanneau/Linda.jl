@@ -5,7 +5,7 @@ const MPB = MathProgBase
     LindaMaster
 
 """
-mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
+mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
 
     #===========================================================================
         RMP data
@@ -19,8 +19,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
         Columns are indexed from `2*m+1` and onwards.
 
         - `num_columns_rmp`: current number of columns in the RMP, excluding
-            artificial variables and columns that have been generated, but are 
-            not currently in the RMP.
+            artificial variables.
         - `active_columns`: Vector of active columns, to be updated every time a
             column is added to / removed from the RMP
         
@@ -69,13 +68,13 @@ mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
         Master Problem Status
 
         The Master Problem is:
-            - Feasible if a feasible solution has been found in the RMP.
-            - Optimal if solved to optimality, i.e. there exists a primal
-                feasible solution, and pricing fails to identify a column of
-                negative reduced cost.
-            - Infeasible if proven infeasible, i.e. RMP is infeasible and
-                Farkas pricing fails to cut the infeasibility ray.
-            - Unbounded if the RMP is unbounded
+        - Feasible if a feasible solution has been found in the RMP.
+        - Optimal if solved to optimality, i.e. there exists a primal
+            feasible solution, and pricing fails to identify a column of
+            negative reduced cost.
+        - Infeasible if proven infeasible, i.e. RMP is infeasible and
+            Farkas pricing fails to cut the infeasibility ray.
+        - Unbounded if the RMP is unbounded
     =#
     mp_status::ProblemStatus  # Status of MasterProblem
     
@@ -92,7 +91,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractLinearQuadraticModel}
         num_constr_cvxty::Int,
         num_constr_link::Int,
         rhs_constr_link::AbstractVector{Float64}
-    ) where RMP<:MPB.AbstractLinearQuadraticModel
+    ) where RMP<:MPB.AbstractMathProgModel
 
         # Dimension check
         n = MPB.numvar(rmp)
