@@ -83,8 +83,6 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
     dual_bound::Float64   # Lagrange dual bound
     dual_bound_estimate::Float64  # Estimate of the Lagrange dual bound
 
-    column_pool::Set{Column}  # Pool of all the generated columns
-
     # Create an empty Master
     function LindaMaster(
         rmp::RMP,
@@ -128,9 +126,6 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         mp.primal_ip_bound = Inf
         mp.dual_bound = -Inf
         mp.dual_bound_estimate = -Inf
-
-        # Initial pool of columns. These are not added to the RMP yet.
-        mp.column_pool = Set{Column}()
 
         return mp
     end
@@ -231,9 +226,6 @@ function add_column!(master::LindaMaster, column::Column)
         # column is already in the RMP
         return nothing
     end
-
-    # add column to column pool
-    push!(master.column_pool, column)
 
     # add column to RMP
     constr_idx = [column.idx_subproblem ; constr_link_idx]
