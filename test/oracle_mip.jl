@@ -4,12 +4,6 @@ n = 1  # number of items
 c = [5.0]  # values of items
 w = 5.0*ones(1, 1)  # weights of items, as a 1-row matrix
 v = 10  # total capacity
-import CPLEX:CplexSolver
-solver_mip = CplexSolver(
-    CPX_PARAM_THREADS=1,
-    CPX_PARAM_SCRIND=0,
-    CPX_PARAM_PREIND=0,
-    CPX_PARAM_REDUCE=2)
 solver_mip = CbcSolver()
 
 # Bounded sub-problem
