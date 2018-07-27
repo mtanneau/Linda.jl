@@ -10,7 +10,15 @@ These status codes are based on those of MathOptInterface
 - `PrimalUnbounded`: Problem is proved to be unbounded
 - `Unknown`: No feasible solution nor proof of infeasibility yet
 """
-@enum ProblemStatus Unknown PrimalFeasible DualFeasible PrimalDualFeasible Optimal PrimalInfeasible PrimalUnbounded
+@enum(ProblemStatus,
+    Unknown,
+    PrimalFeasible,
+    DualFeasible,
+    PrimalDualFeasible,
+    Optimal,
+    PrimalInfeasible,
+    PrimalUnbounded
+)
 
 findStatus(::T) where T = Unknown
 findStatus(s::Symbol) = findStatus(Val{s})
