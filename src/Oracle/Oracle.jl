@@ -4,10 +4,13 @@ import MathProgBase
 const MPB = MathProgBase
 
 import Linda:
-    Column,
+    Column, get_reduced_cost,
     ProblemStatus,
     Unknown, PrimalFeasible, DualFeasible, PrimalDualFeasible, Optimal, PrimalInfeasible, PrimalUnbounded,
     findStatus
+
+export
+    AbstractLindaOracle, call_oracle!, get_new_columns, get_sp_dual_bound
 
 
 """
@@ -62,7 +65,14 @@ Get best known dual bound from last call to the oracle. If no dual bound is
 """
 function get_sp_dual_bound end
 
+"""
+    get_sp_best_objective
 
-include("oracle_mip.jl")  # Sub-problem is solved as a MIP
+Get best objective, i.e. most negative reduced cost
+"""
+function get_sp_best_objective end
+
+include("oracle_handler.jl")
+include("oracle_mip.jl")  # Solve sub-problem as a MIP
 
 end  # Oracle module

@@ -4,9 +4,10 @@ module Linda
 include("status.jl")
 include("column.jl")
 # include("subproblem.jl")
-include("master.jl")
 include("Oracle/Oracle.jl")
 
-# include("SimpleProblem/SimpleProblem.jl")
+include("master.jl")
+include("colgen.jl")
+
 
 end # module

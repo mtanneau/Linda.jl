@@ -77,18 +77,25 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         - Unbounded if the RMP is unbounded
     =#
     mp_status::ProblemStatus  # Status of MasterProblem
+
+    oracle::Oracle.AbstractLindaOracle  # Pricing oracle
     
     primal_lp_bound::Float64  # Primal bound for the linear (DW) relaxation
     primal_ip_bound::Float64  # Primal bound for the integer problem
     dual_bound::Float64   # Lagrange dual bound
     dual_bound_estimate::Float64  # Estimate of the Lagrange dual bound
 
-    # Create an empty Master
+
+    #===========================================================================
+        Constructor
+    ===========================================================================#
+    
     function LindaMaster(
         rmp::RMP,
         num_constr_cvxty::Int,
         num_constr_link::Int,
-        rhs_constr_link::AbstractVector{Float64}
+        rhs_constr_link::AbstractVector{Float64},
+        oracle::Oracle.AbstractLindaOracle
     ) where RMP<:MPB.AbstractMathProgModel
 
         # Dimension check
@@ -97,11 +104,9 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
             "RMP has $(n) variables instead of $(2*num_constr_link)"
         ))
         m = MPB.numconstr(rmp)
-        m == (num_constr_cvxty + num_constr_link) || throw(
-            ErrorException(
-                "RMP has $(m) constraints instead of $(num_constr_cvxty + num_constr_link)"
-            )
-        )
+        m == (num_constr_cvxty + num_constr_link) || throw(ErrorException(
+            "RMP has $(m) constraints instead of $(num_constr_cvxty + num_constr_link)"
+        ))
         num_constr_link == size(rhs_constr_link, 1) || throw(DimensionMismatch(
             "RMP has $(num_constr_link) linking constraints but b has size $(size(rhs_constr_link))"
         ))
@@ -121,6 +126,8 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         mp.rmp = rmp
         mp.rmp_status = Unknown
 
+        mp.oracle = oracle
+
         mp.mp_status = Unknown
         mp.primal_lp_bound = Inf
         mp.primal_ip_bound = Inf
@@ -129,6 +136,51 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
 
         return mp
     end
+end
+
+
+function LindaMaster(
+    num_constr_cvxty::Int,
+    num_constr_link::Int,
+    rhs_constr_link::AbstractVector{Float64},
+    lp_solver::MPB.AbstractMathProgSolver,
+    oracle::Oracle.AbstractLindaOracle
+)
+    # Dimension checks
+    num_constr_link == size(rhs_constr_link, 1) || throw(DimensionMismatch(
+        "Right-hand side has wrong dimension."
+    ))
+    # Create RMP
+    rmp = MPB.LinearQuadraticModel(lp_solver)
+    # Add constraints
+    for r in 1:num_constr_cvxty
+        MPB.addconstr!(rmp, Vector{Float64}(), Vector{Float64}(), 1.0, 1.0)
+    end
+    for i in 1:num_constr_link
+        MPB.addconstr!(
+            rmp,
+            Vector{Float64}(),
+            Vector{Float64}(),
+            rhs_constr_link[i],
+            rhs_constr_link[i]
+        )
+    end
+
+    # Add artificial variables
+    for i in 1:num_constr_link
+        MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
+        MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
+    end
+
+    mp = LindaMaster(
+        rmp,
+        num_constr_cvxty,
+        num_constr_link,
+        rhs_constr_link,
+        oracle
+    )
+
+    return mp
 end
 
 function solve!(master::LindaMaster; verbose=1)

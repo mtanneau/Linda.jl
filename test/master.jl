@@ -1,27 +1,15 @@
-function create_mp(m, R, b)
-
-    rmp = MPB.LinearQuadraticModel(ClpSolver())
-    # Convexity constraints
-    for r in 1:R
-        MPB.addconstr!(rmp, Vector{Float64}(), Vector{Float64}(), 1.0, 1.0)
-    end
-
-    # linking constraints
-    for i in 1:m
-        MPB.addconstr!(rmp, Vector{Float64}(), Vector{Float64}(), b[i], b[i])
-    end
-
-    # Artificial variables
-    for i in 1:m
-        MPB.addvar!(rmp, [R+i], [1.0], 0.0, Inf, 10^4)  # slack
-        MPB.addvar!(rmp, [R+i], [-1.0], 0.0, Inf, 10^4)  # surplus
-    end
-
-    # Instanciate RMP
-    mp = Linda.LindaMaster(rmp, R, m, b)
-
-    return mp
-end
+oracle = Linda.Oracle.LindaOracleMIP(
+    1,
+    [-1.0],
+    ones(1, 1),
+    ones(1, 1),
+    [-Inf],
+    [1.0],
+    [:Cont],
+    zeros(1),
+    ones(1),
+    ClpSolver()
+)
 
 function add_initial_columns!(mp, m, R)
 
@@ -48,7 +36,7 @@ m = 2  # number of linking constraints
 R = 2  # number of sub-problems
 b = zeros(m)  # Right-hand side of linking constraints
 
-mp = create_mp(m, R, b)
+mp = Linda.LindaMaster(R, m, b, ClpSolver(), oracle)
 add_initial_columns!(mp, m, R)
 
 @test mp.num_columns_rmp == 2*R
