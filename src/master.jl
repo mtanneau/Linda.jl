@@ -94,9 +94,9 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         rmp::RMP,
         num_constr_cvxty::Int,
         num_constr_link::Int,
-        rhs_constr_link::AbstractVector{Float64},
+        rhs_constr_link::AbstractVector{Tv},
         oracle::Oracle.AbstractLindaOracle
-    ) where RMP<:MPB.AbstractMathProgModel
+    ) where{RMP<:MPB.AbstractMathProgModel, Tv<:Real}
 
         # Dimension check
         n = MPB.numvar(rmp)
@@ -138,14 +138,13 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
     end
 end
 
-
 function LindaMaster(
     num_constr_cvxty::Int,
     num_constr_link::Int,
-    rhs_constr_link::AbstractVector{Float64},
+    rhs_constr_link::AbstractVector{Tv},
     lp_solver::MPB.AbstractMathProgSolver,
     oracle::Oracle.AbstractLindaOracle
-)
+) where{Tv<:Real}
     # Dimension checks
     num_constr_link == size(rhs_constr_link, 1) || throw(DimensionMismatch(
         "Right-hand side has wrong dimension."
@@ -168,8 +167,8 @@ function LindaMaster(
 
     # Add artificial variables
     for i in 1:num_constr_link
-        MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
-        MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
+        MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, Inf, 10^4) # slack
+        MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, Inf, 10^4) # surplus
     end
 
     mp = LindaMaster(
