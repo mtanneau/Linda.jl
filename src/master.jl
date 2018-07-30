@@ -182,39 +182,6 @@ function LindaMaster(
     return mp
 end
 
-function solve!(master::LindaMaster; verbose=1)
-
-    # Run-time initialization
-    n_cg_iter = 0
-
-    # main CG loop
-    while n_cg_iter < 100
-
-        # Solve Restricted Master Problem to update dual variables
-        solve_rmp!(master)
-
-        # Log
-        if verbose == 1
-            println()
-        end
-        n_cg_iter += 1
-
-        # Look for early termination
-        if master.mp_status == PrimalUnbounded
-            println("Master Problem is unbounded.")
-            return nothing
-        end
-
-        # Pricing step
-
-
-        
-    end
-
-
-
-    return nothing
-end
 
 """
     solve_rmp!(master)
@@ -262,6 +229,7 @@ function solve_rmp!(master::LindaMaster)
     return nothing
 end
 
+
 """
     add_column!(master, column)
 
@@ -298,6 +266,7 @@ function add_column!(master::LindaMaster, column::Column)
 
     return nothing
 end
+
 
 """
     add_columns!
