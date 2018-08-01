@@ -27,12 +27,14 @@ Compute reduced cost of column given current dual iterate
 get_reduced_cost(
     c::Column{Tv, Tc},
     π::AbstractVector{Float64},
-    σ::Real
-) where{Tv<:Real, Tc<:AbstractArray{Tv}} = c.cost - dot(π, c.col) - σ
+    σ::Real,
+    farkas=false
+) where{Tv<:Real, Tc<:AbstractArray{Tv}} = (!farkas)*c.cost - dot(π, c.col) - σ
 
 get_reduced_cost(
     c::Column{Tv, Tc},
     π::AbstractVector{Float64},
-    σ::AbstractVector{Float64}
+    σ::AbstractVector{Float64},
+    farkas=false
 ) where{Tv<:Real, Tc<:AbstractArray{Tv}} = 
-    get_reduced_cost(c, π, σ[c.idx_subproblem])
+    get_reduced_cost(c, π, σ[c.idx_subproblem], farkas)

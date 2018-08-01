@@ -65,6 +65,12 @@ function solve_colgen!(
             end
 
             return mp.mp_status
+        elseif farkas && length(cols) == 0
+            if env[:verbose] == 1
+                println("Master is infeasible.")
+            end
+            mp.mp_status = PrimalInfeasible
+            return mp.mp_status
         else
             # add columns
             add_columns!(mp, cols)

@@ -211,7 +211,7 @@ function solve_rmp!(master::LindaMaster)
 
         # update dual variables
         y = MPB.getinfeasibilityray(master.rmp)
-        master.σ .= 0.0
+        master.σ .= y[1:master.num_constr_cvxty]
         master.π .= y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)]
 
     elseif rmp_status == PrimalUnbounded

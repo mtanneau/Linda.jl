@@ -20,6 +20,7 @@ function call_oracle!(
     σ::AbstractVector{T2};
     farkas=false
 ) where{T1<:Real, T2<:Real}
+    # println("\tPricing, Farkas=$farkas")
     handler.new_columns = Set{Column}()
 
     # Check dimensions
@@ -27,7 +28,8 @@ function call_oracle!(
         "Handler has $(handler.n) sub-problems but σ has size $(size(σ, 1))"
     ))
 
-    handler.sp_dual_bound = 0.0
+    handler.sp_dual_bound = (farkas ? (-Inf) : 0.0)
+    best_red_cost = 0.0
 
     # price each sub-problem
     for (r, o) in enumerate(handler.oracles)
@@ -48,12 +50,17 @@ function call_oracle!(
         cols = get_new_columns(o)
         for col in cols
             col.idx_subproblem = r
-            if get_reduced_cost(col, π, σ[r]) < -env[:tol_reduced_cost]
+            rc = get_reduced_cost(col, π, σ[r], farkas)
+            if rc < -env[:tol_reduced_cost]
                 push!(handler.new_columns, col)
             end
+            best_red_cost = min(rc, best_red_cost)
         end
-
+        
     end
+
+    # println("\tNCols: ", length(handler.new_columns))
+    # println("\trc=: ", best_red_cost)
 
     return nothing
      
