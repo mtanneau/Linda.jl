@@ -4,14 +4,19 @@
 Column-Generation algorithm.
 """
 function solve_colgen!(
-    mp::LindaMaster{RMP}
+    env::LindaEnv,
+    mp::LindaMaster{RMP},
+    oracle::Oracle.AbstractLindaOracle
 ) where{RMP<:MPB.AbstractMathProgModel}
 
     # Pre-optimization stuff
     n_cg_iter = 0
-    println(" Itn    Primal Obj      Dual Obj        NCols")
+    if env[:verbose] == 1
+        println(" Itn    Primal Obj      Dual Obj        NCols")
+    end
+
     # Main CG loop
-    while n_cg_iter < 100
+    while n_cg_iter < env[:num_cgiter_max]
         # Solve RMP, update dual variables
         solve_rmp!(mp)
 
@@ -29,20 +34,22 @@ function solve_colgen!(
 
         # Log
         # Iteration count
-        @printf("%4d", n_cg_iter)
-        # Primal and Dual objectives
-        @printf("%+18.7e", mp.primal_lp_bound)
-        @printf("%+16.7e", mp.dual_bound)
-        # RMP stats
-        @printf("%10.0f", mp.num_columns_rmp)  # number of columns in RMP
-        print("\n")
+        if env[:verbose] == 1
+            @printf("%4d", n_cg_iter)
+            # Primal and Dual objectives
+            @printf("%+18.7e", mp.primal_lp_bound)
+            @printf("%+16.7e", mp.dual_bound)
+            # RMP stats
+            @printf("%10.0f", mp.num_columns_rmp)  # number of columns in RMP
+            print("\n")
+        end
 
         # Price
-        Oracle.call_oracle!(mp.oracle, mp.π, mp.σ, farkas=farkas)
-        cols = Oracle.get_new_columns(mp.oracle)
+        Oracle.call_oracle!(env, oracle, mp.π, mp.σ, farkas=farkas)
+        cols = Oracle.get_new_columns(oracle)
         lagrange_lb = (
             dot(mp.π, mp.rhs_constr_link)
-            + Oracle.get_sp_dual_bound(mp.oracle)
+            + Oracle.get_sp_dual_bound(oracle)
         )  # Compute Lagrange lower bound
         mp.dual_bound = lagrange_lb > mp.dual_bound ? lagrange_lb : mp.dual_bound
 
@@ -53,7 +60,10 @@ function solve_colgen!(
         )
         if mp_gap <= 10.0 ^-4
             mp.mp_status = Optimal
-            println("Root relaxation solved.")
+            if env[:verbose] == 1
+                println("Root relaxation solved.")
+            end
+
             return mp.mp_status
         else
             # add columns

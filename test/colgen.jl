@@ -13,8 +13,8 @@ end
 srand(0)
 n = 20  # original dimension
 m = 1  # number of linking constraints
-R = 2  # number of sub-problems
-b = [5.0]  # Right-hand side of linking constraints
+R = 10  # number of sub-problems
+b = [R]  # Right-hand side of linking constraints
 
 # Create oracle
 # Sub-problem is a continuous knapsack
@@ -33,7 +33,14 @@ oracles = [Linda.Oracle.LindaOracleMIP(
 
 handler = Linda.Oracle.LindaOracleHandler(oracles)
 
-mp = Linda.LindaMaster(R, m, b, ClpSolver(), handler)
+mp = Linda.LindaMaster(
+    R, m, b,
+    ClpSolver(),
+    handler
+)
 add_initial_columns!(mp, m, R)
 
-Linda.solve_colgen!(mp)
+env = Linda.LindaEnv()
+env[:verbose] = 1
+
+Linda.solve_colgen!(env, mp, handler)

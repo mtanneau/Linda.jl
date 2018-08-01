@@ -14,6 +14,7 @@ mutable struct LindaOracleHandler <: AbstractLindaOracle
 end
 
 function call_oracle!(
+    env::LindaEnv,
     handler::LindaOracleHandler,
     π::AbstractVector{T1},
     σ::AbstractVector{T2};
@@ -31,7 +32,7 @@ function call_oracle!(
     # price each sub-problem
     for (r, o) in enumerate(handler.oracles)
         # solve sub-problem
-        call_oracle!(o, π, σ[r])
+        call_oracle!(env, o, π, σ[r])
 
         # Check for infeasible sub-problem
         s = get_oracle_status(o)
@@ -47,7 +48,7 @@ function call_oracle!(
         cols = get_new_columns(o)
         for col in cols
             col.idx_subproblem = r
-            if get_reduced_cost(col, π, σ[r]) < -TOL_REDCOST
+            if get_reduced_cost(col, π, σ[r]) < -env[:tol_reduced_cost]
                 push!(handler.new_columns, col)
             end
         end
