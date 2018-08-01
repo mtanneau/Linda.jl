@@ -94,8 +94,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         rmp::RMP,
         num_constr_cvxty::Int,
         num_constr_link::Int,
-        rhs_constr_link::AbstractVector{Tv},
-        oracle::Oracle.AbstractLindaOracle
+        rhs_constr_link::AbstractVector{Tv}
     ) where{RMP<:MPB.AbstractMathProgModel, Tv<:Real}
 
         # Dimension check
@@ -126,8 +125,6 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         mp.rmp = rmp
         mp.rmp_status = Unknown
 
-        mp.oracle = oracle
-
         mp.mp_status = Unknown
         mp.primal_lp_bound = Inf
         mp.primal_ip_bound = Inf
@@ -142,8 +139,7 @@ function LindaMaster(
     num_constr_cvxty::Int,
     num_constr_link::Int,
     rhs_constr_link::AbstractVector{Tv},
-    lp_solver::MPB.AbstractMathProgSolver,
-    oracle::Oracle.AbstractLindaOracle
+    lp_solver::MPB.AbstractMathProgSolver
 ) where{Tv<:Real}
     # Dimension checks
     num_constr_link == size(rhs_constr_link, 1) || throw(DimensionMismatch(
@@ -175,8 +171,7 @@ function LindaMaster(
         rmp,
         num_constr_cvxty,
         num_constr_link,
-        rhs_constr_link,
-        oracle
+        rhs_constr_link
     )
 
     return mp

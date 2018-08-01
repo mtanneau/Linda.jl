@@ -40,8 +40,7 @@ handler = Linda.Oracle.LindaOracleHandler(oracles)
 # Instanciate MP
 mp = Linda.LindaMaster(
     R, m, b,
-    ClpSolver(),
-    handler
+    ClpSolver()
 )
 add_initial_columns!(mp, m, R)
 

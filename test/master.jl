@@ -1,15 +1,15 @@
-oracle = Linda.Oracle.LindaOracleMIP(
-    1,
-    [-1.0],
-    ones(1, 1),
-    ones(1, 1),
-    [-Inf],
-    [1.0],
-    [:Cont],
-    zeros(1),
-    ones(1),
-    ClpSolver()
-)
+# oracle = Linda.Oracle.LindaOracleMIP(
+#     1,
+#     [-1.0],
+#     ones(1, 1),
+#     ones(1, 1),
+#     [-Inf],
+#     [1.0],
+#     [:Cont],
+#     zeros(1),
+#     ones(1),
+#     ClpSolver()
+# )
 
 function add_initial_columns!(mp, m, R)
 
@@ -36,7 +36,7 @@ m = 2  # number of linking constraints
 R = 2  # number of sub-problems
 b = zeros(m)  # Right-hand side of linking constraints
 
-mp = Linda.LindaMaster(R, m, b, ClpSolver(), oracle)
+mp = Linda.LindaMaster(R, m, b, ClpSolver())
 add_initial_columns!(mp, m, R)
 
 @test mp.num_columns_rmp == 2*R
