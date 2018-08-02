@@ -28,13 +28,13 @@ get_reduced_cost(
     c::Column{Tv, Tc},
     π::AbstractVector{Float64},
     σ::Real,
-    farkas=false
+    farkas::Bool=false
 ) where{Tv<:Real, Tc<:AbstractArray{Tv}} = (!farkas)*c.cost - dot(π, c.col) - σ
 
 get_reduced_cost(
     c::Column{Tv, Tc},
     π::AbstractVector{Float64},
     σ::AbstractVector{Float64},
-    farkas=false
+    farkas::Bool=false
 ) where{Tv<:Real, Tc<:AbstractArray{Tv}} = 
     get_reduced_cost(c, π, σ[c.idx_subproblem], farkas)

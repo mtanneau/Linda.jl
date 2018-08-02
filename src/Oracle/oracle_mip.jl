@@ -65,7 +65,7 @@ function call_oracle!(
     oracle::LindaOracleMIP,
     π::AbstractVector{Tv},
     σ::Real;
-    farkas=false
+    farkas::Bool=false
 ) where{Tv<:Real}
 
     # Dimension checks

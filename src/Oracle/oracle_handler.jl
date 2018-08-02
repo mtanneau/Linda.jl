@@ -18,7 +18,7 @@ function call_oracle!(
     handler::LindaOracleHandler,
     π::AbstractVector{T1},
     σ::AbstractVector{T2};
-    farkas=false
+    farkas::Bool=false
 ) where{T1<:Real, T2<:Real}
     # println("\tPricing, Farkas=$farkas")
     handler.new_columns = Set{Column}()
