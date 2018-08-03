@@ -11,6 +11,12 @@ function solve_colgen!(
 
     # Pre-optimization stuff
     n_cg_iter = 0
+    time_mp_total = 0.0
+    time_sp_total = 0.0
+    time_cg_total = 0.0
+
+    tic()  # start
+
     if env[:verbose] == 1
         println(" Itn    Primal Obj      Dual Obj        NCols")
     end
@@ -18,7 +24,9 @@ function solve_colgen!(
     # Main CG loop
     while n_cg_iter < env[:num_cgiter_max]
         # Solve RMP, update dual variables
+        tic()
         solve_rmp!(mp)
+        time_mp_total += toq()
 
         if mp.rmp_status == Optimal
             farkas=false
@@ -32,6 +40,18 @@ function solve_colgen!(
             return mp.mp_status
         end
 
+        # Price
+        tic()
+        Oracle.call_oracle!(env, oracle, mp.π, mp.σ, farkas=farkas)
+        time_sp_total += toq()
+
+        cols = Oracle.get_new_columns(oracle)
+        lagrange_lb = (
+            dot(mp.π, mp.rhs_constr_link)
+            + Oracle.get_sp_dual_bound(oracle)
+        )  # Compute Lagrange lower bound
+        mp.dual_bound = lagrange_lb > mp.dual_bound ? lagrange_lb : mp.dual_bound
+
         # Log
         # Iteration count
         if env[:verbose] == 1
@@ -44,15 +64,6 @@ function solve_colgen!(
             print("\n")
         end
 
-        # Price
-        Oracle.call_oracle!(env, oracle, mp.π, mp.σ, farkas=farkas)
-        cols = Oracle.get_new_columns(oracle)
-        lagrange_lb = (
-            dot(mp.π, mp.rhs_constr_link)
-            + Oracle.get_sp_dual_bound(oracle)
-        )  # Compute Lagrange lower bound
-        mp.dual_bound = lagrange_lb > mp.dual_bound ? lagrange_lb : mp.dual_bound
-
         # Check duality gap
         mp_gap = (
             abs(mp.primal_lp_bound - mp.dual_bound)
@@ -64,12 +75,21 @@ function solve_colgen!(
                 println("Root relaxation solved.")
             end
 
+            time_cg_total += toq()
+            println("Total time / MP: ", time_mp_total)
+            println("Total time / SP: ", time_sp_total)
+            println("Total time / CG: ", time_cg_total)
             return mp.mp_status
+
         elseif farkas && length(cols) == 0
             if env[:verbose] == 1
                 println("Master is infeasible.")
             end
             mp.mp_status = PrimalInfeasible
+            time_cg_total += toq()
+            println("Total time / MP: ", time_mp_total)
+            println("Total time / SP: ", time_sp_total)
+            println("Total time / CG: ", time_cg_total)
             return mp.mp_status
         else
             # add columns
@@ -79,6 +99,10 @@ function solve_colgen!(
         n_cg_iter += 1
     end
 
+    time_cg_total += toq()
+    println("Total time / MP: ", time_mp_total)
+    println("Total time / SP: ", time_sp_total)
+    println("Total time / CG: ", time_cg_total)
     return mp.mp_status
 
 end
