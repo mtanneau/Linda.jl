@@ -139,6 +139,7 @@ function LindaMaster(
     num_constr_cvxty::Int,
     num_constr_link::Int,
     rhs_constr_link::AbstractVector{Tv},
+    senses::AbstractVector{Char},
     lp_solver::MPB.AbstractMathProgSolver
 ) where{Tv<:Real}
     # Dimension checks
@@ -159,12 +160,26 @@ function LindaMaster(
             rhs_constr_link[i],
             rhs_constr_link[i]
         )
+
     end
 
     # Add artificial variables
     for i in 1:num_constr_link
-        MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, Inf, 10^4) # slack
-        MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, Inf, 10^4) # surplus
+        if senses[i] == '='
+            # Artificial slack and surplus
+            MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
+            MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
+        elseif senses[i] == '<'
+            # Regular slack ; artificial surplus
+            MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, Inf, 0.0) # slack
+            MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
+        elseif senses[i] == '>'
+            # Artificial slack ; regular surplus
+            MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
+            MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, Inf, 0.0) # surplus
+        else
+            error("Wrong input $(senses[i])")
+        end
     end
 
     mp = LindaMaster(
@@ -176,6 +191,19 @@ function LindaMaster(
 
     return mp
 end
+
+LindaMaster(
+    num_constr_cvxty::Int,
+    num_constr_link::Int,
+    rhs_constr_link::AbstractVector{Tv},
+    lp_solver::MPB.AbstractMathProgSolver
+) where{Tv<:Real} = LindaMaster(
+    num_constr_cvxty,
+    num_constr_link,
+    rhs_constr_link,
+    fill('=', num_constr_link),
+    lp_solver
+)
 
 
 """
