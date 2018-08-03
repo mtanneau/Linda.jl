@@ -67,7 +67,7 @@ function solve_colgen!(
         # Check duality gap
         mp_gap = (
             abs(mp.primal_lp_bound - mp.dual_bound)
-            / (1.0 + abs(mp.dual_bound))
+            / (1.0 + abs(mp.primal_lp_bound))
         )
         if mp_gap <= 10.0 ^-4
             mp.mp_status = Optimal
