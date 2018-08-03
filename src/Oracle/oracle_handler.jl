@@ -34,12 +34,13 @@ function call_oracle!(
     # price each sub-problem
     for (r, o) in enumerate(handler.oracles)
         # solve sub-problem
-        call_oracle!(env, o, π, σ[r])
+        call_oracle!(env, o, π, σ[r], farkas=farkas)
 
         # Check for infeasible sub-problem
         s = get_oracle_status(o)
         if s == PrimalInfeasible
             handler.status = PrimalInfeasible
+            warn("Infeasible sub-problem")
             return nothing
         end
 
