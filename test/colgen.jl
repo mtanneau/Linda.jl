@@ -35,7 +35,7 @@ oracles = [
 ]
 
 
-handler = Linda.Oracle.LindaOracleHandler(oracles)
+pool = Linda.Oracle.LindaOraclePool(oracles)
 
 # Instanciate MP
 mp = Linda.LindaMaster(
@@ -50,7 +50,7 @@ env[:verbose] = 1  # Activate iteration log
 env[:num_cgiter_max] = 10
 
 # Solve problem with column generation
-Linda.solve_colgen!(env, mp, handler)
+Linda.solve_colgen!(env, mp, pool)
 
 # Make Master Infeasible, solve again
 b_ = [n*R+1.0]
@@ -60,4 +60,4 @@ mp.rhs_constr_link = copy(b_)
 MPB.setvarUB!(mp.rmp, vcat(zeros(2*m), Inf*ones(mp.num_columns_rmp)))
 mp.dual_bound = -Inf
 
-Linda.solve_colgen!(env, mp, handler)
+Linda.solve_colgen!(env, mp, pool)
