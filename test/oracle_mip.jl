@@ -6,8 +6,6 @@ w = 5.0*ones(1, 1)  # weights of items, as a 1-row matrix
 v = 10  # total capacity
 solver_mip = CbcSolver()
 
-env = Linda.LindaEnv()
-
 # Bounded sub-problem
 # Min -x
 # s.t. x <= 1
@@ -63,7 +61,7 @@ oracle_infeas = Linda.Oracle.LindaOracleMIP(
 σ = 0.0
 
 # Bounded oracle
-Linda.Oracle.call_oracle!(env, oracle_bounded, π, σ)  # solve sub-problem
+Linda.Oracle.call_oracle!(oracle_bounded, π, σ)  # solve sub-problem
 status = Linda.Oracle.get_oracle_status(oracle_bounded)
 if status == Linda.Optimal
     # at least one column should have been generated
@@ -93,7 +91,7 @@ else
 end
 
 # Unbounded sub-problem
-Linda.Oracle.call_oracle!(env, oracle_unbound, π, σ)
+Linda.Oracle.call_oracle!(oracle_unbound, π, σ)
 status = Linda.Oracle.get_oracle_status(oracle_unbound)
 if status == Linda.PrimalUnbounded
     @test Linda.Oracle.get_num_new_columns(oracle_unbound) >= 1
@@ -117,7 +115,7 @@ else
 end
 
 # Infeasible sub-problem
-Linda.Oracle.call_oracle!(env, oracle_infeas, π, σ)
+Linda.Oracle.call_oracle!(oracle_infeas, π, σ)
 status = Linda.Oracle.get_oracle_status(oracle_infeas)
 @test typeof(status) == Linda.ProblemStatus
 @test status == Linda.Unknown || status == Linda.PrimalInfeasible

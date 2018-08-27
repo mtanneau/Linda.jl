@@ -61,11 +61,11 @@ mutable struct LindaOracleMIP <: AbstractLindaOracle
 end
 
 function call_oracle!(
-    env::LindaEnv,
     oracle::LindaOracleMIP,
     π::AbstractVector{Tv},
     σ::Real;
-    farkas::Bool=false
+    farkas::Bool=false,
+    tol_reduced_cost::Float64=1.0e-6
 ) where{Tv<:Real}
 
     # Dimension checks

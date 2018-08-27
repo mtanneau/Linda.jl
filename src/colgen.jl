@@ -42,7 +42,11 @@ function solve_colgen!(
 
         # Price
         tic()
-        Oracle.call_oracle!(env, oracle, mp.π, mp.σ, farkas=farkas)
+        Oracle.call_oracle!(
+            oracle, mp.π, mp.σ,
+            farkas=farkas,
+            tol_reduced_cost=env[:tol_reduced_cost]
+        )
         time_sp_total += toq()
 
         cols = Oracle.get_new_columns(oracle)

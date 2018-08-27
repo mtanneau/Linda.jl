@@ -1,7 +1,7 @@
-TOL_REDCOST = 10.0^-6  # numerical tolerance for reduced costs
-
 """
+    LindaOraclePool
 
+Pool of multiple sub-problems.
 """
 mutable struct LindaOraclePool <: AbstractLindaOracle
     n::Int  # Number of oracles (i.e. sub-problems)
@@ -14,11 +14,11 @@ mutable struct LindaOraclePool <: AbstractLindaOracle
 end
 
 function call_oracle!(
-    env::LindaEnv,
     pool::LindaOraclePool,
     π::AbstractVector{T1},
     σ::AbstractVector{T2};
-    farkas::Bool=false
+    farkas::Bool=false,
+    tol_reduced_cost::Float64=1.0e-6
 ) where{T1<:Real, T2<:Real}
     # println("\tPricing, Farkas=$farkas")
     pool.new_columns = Set{Column}()
@@ -39,7 +39,7 @@ function call_oracle!(
 
         o = pool.oracles[r]
         # solve sub-problem
-        call_oracle!(env, o, π, σ[r], farkas=farkas)
+        call_oracle!(o, π, σ[r], farkas=farkas, tol_reduced_cost=tol_reduced_cost)
         nsp_priced += 1
 
         # Check for infeasible sub-problem
@@ -58,7 +58,7 @@ function call_oracle!(
         for col in cols
             col.idx_subproblem = r
             rc = get_reduced_cost(col, π, σ[r], farkas)
-            if rc < -env[:tol_reduced_cost]
+            if rc < tol_reduced_cost
                 push!(pool.new_columns, col)
             end
             best_red_cost = min(rc, best_red_cost)
