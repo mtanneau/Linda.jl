@@ -39,7 +39,11 @@ function call_oracle!(
 
         o = pool.oracles[r]
         # solve sub-problem
-        call_oracle!(o, π, σ[r], farkas=farkas, tol_reduced_cost=tol_reduced_cost)
+        call_oracle!(
+            o, π, σ[r],
+            farkas=farkas,
+            tol_reduced_cost=tol_reduced_cost
+        )
         nsp_priced += 1
 
         # Check for infeasible sub-problem
@@ -54,11 +58,12 @@ function call_oracle!(
         pool.sp_dual_bound += get_sp_dual_bound(o)
 
         # Get new columns
+        # TODO: parametrize
         cols = get_new_columns(o)
         for col in cols
             col.idx_subproblem = r
             rc = get_reduced_cost(col, π, σ[r], farkas)
-            if rc < tol_reduced_cost
+            if rc < -tol_reduced_cost
                 push!(pool.new_columns, col)
             end
             best_red_cost = min(rc, best_red_cost)
