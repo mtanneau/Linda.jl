@@ -266,7 +266,7 @@ function add_column!(master::LindaMaster, column::Column)
 
     if column.is_in_rmp
         # column is already in the RMP
-        return nothing
+        return false
     end
 
     # add column to RMP
@@ -287,7 +287,7 @@ function add_column!(master::LindaMaster, column::Column)
     column.is_in_rmp = true
     column.idx_column = master.num_columns_rmp
 
-    return nothing
+    return true
 end
 
 
