@@ -76,25 +76,28 @@ function solve_colgen!(
         )
         if mp_gap <= 10.0 ^-4
             mp.mp_status = Optimal
+            
+            time_cg_total += toq()
             if env[:verbose] == 1
                 println("Root relaxation solved.")
+                println("Total time / MP: ", time_mp_total)
+                println("Total time / SP: ", time_sp_total)
+                println("Total time / CG: ", time_cg_total)
             end
-
-            time_cg_total += toq()
-            println("Total time / MP: ", time_mp_total)
-            println("Total time / SP: ", time_sp_total)
-            println("Total time / CG: ", time_cg_total)
+            
             return mp.mp_status
 
         elseif farkas && length(cols) == 0
-            if env[:verbose] == 1
-                println("Master is infeasible.")
-            end
+            
             mp.mp_status = PrimalInfeasible
             time_cg_total += toq()
-            println("Total time / MP: ", time_mp_total)
-            println("Total time / SP: ", time_sp_total)
-            println("Total time / CG: ", time_cg_total)
+            if env[:verbose] == 1
+                println("Master is infeasible.")
+                println("Total time / MP: ", time_mp_total)
+                println("Total time / SP: ", time_sp_total)
+                println("Total time / CG: ", time_cg_total)
+            end
+            
             return mp.mp_status
         else
             # add columns
@@ -105,9 +108,12 @@ function solve_colgen!(
     end
 
     time_cg_total += toq()
-    println("Total time / MP: ", time_mp_total)
-    println("Total time / SP: ", time_sp_total)
-    println("Total time / CG: ", time_cg_total)
+    if env[:verbose] == 1
+        println("Total time / MP: ", time_mp_total)
+        println("Total time / SP: ", time_sp_total)
+        println("Total time / CG: ", time_cg_total)
+    end
+    
     return mp.mp_status
 
 end
