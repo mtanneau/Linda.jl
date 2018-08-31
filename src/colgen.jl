@@ -18,7 +18,7 @@ function solve_colgen!(
     tic()  # start
 
     if env[:verbose] == 1
-        println(" Itn    Primal Obj      Dual Obj        NCols")
+        println(" Itn    Primal Obj      Dual Obj        NCols    Time (s)")
     end
 
     # Main CG loop
@@ -65,6 +65,7 @@ function solve_colgen!(
             @printf("%+16.7e", mp.dual_bound)
             # RMP stats
             @printf("%10.0f", mp.num_columns_rmp)  # number of columns in RMP
+            @printf("%9.2f", time_mp_total + time_sp_total)
             print("\n")
         end
 
