@@ -77,15 +77,25 @@ get_param_value(par::LindaNumParam{T}) where T = par.val
 
 set_param_default!(par::LindaNumParam) = (par.val = par.def_val)
 
-function set_param_value!(par::LindaNumParam, v::T) where{T<:Real}
+"""
+    set_param_value!(p, v)
 
-    if !test_param_value(par, v)
-        error("$(par.name) must be between $(par.min_val) and $(par.max_val).")
+Set value of parameter `p` to `v`. Raises an error if `v` is not an admissible value.
+"""
+function set_param_value!(p::LindaNumParam, v::T) where{T<:Real}
+
+    if test_param_value(p, v)
+        p.val = v
     else
-        par.val = v
+        error("$(p.name) must be between $(p.min_val) and $(p.max_val).")
     end
 
     return nothing
 end
 
-test_param_value(par::LindaNumParam, v::T) where{T<:Real} = (par.min_val <= v <= par.max_val)
+"""
+    test_param_value(p, v)
+
+Return whether `v` is an admissible value for parameter `p` 
+"""
+test_param_value(p::LindaNumParam, v::T) where{T<:Real} = (p.min_val <= v <= p.max_val)
