@@ -117,5 +117,5 @@ end
 # Infeasible sub-problem
 Linda.Oracle.call_oracle!(oracle_infeas, π, σ)
 status = Linda.Oracle.get_oracle_status(oracle_infeas)
-@test typeof(status) == Linda.ProblemStatus
+@test typeof(status) == Linda.Status
 @test status == Linda.Unknown || status == Linda.PrimalInfeasible

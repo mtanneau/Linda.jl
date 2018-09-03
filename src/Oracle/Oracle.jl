@@ -5,9 +5,8 @@ const MPB = MathProgBase
 
 import Linda:
     Column, get_reduced_cost,
-    ProblemStatus,
+    Status,
     Unknown, PrimalFeasible, DualFeasible, PrimalDualFeasible, Optimal, PrimalInfeasible, PrimalUnbounded,
-    findStatus,
     LindaEnv
 
 export

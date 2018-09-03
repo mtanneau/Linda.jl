@@ -1,5 +1,5 @@
 """
-    ProblemStatus
+    Status
 
 These status codes are based on those of MathOptInterface
 - `PrimalFeasible`: A primal feasible solution has been found
@@ -10,7 +10,7 @@ These status codes are based on those of MathOptInterface
 - `PrimalUnbounded`: Problem is proved to be unbounded
 - `Unknown`: No feasible solution nor proof of infeasibility yet
 """
-@enum(ProblemStatus,
+@enum(Status,
     Unknown,
     PrimalFeasible,
     DualFeasible,
@@ -20,11 +20,9 @@ These status codes are based on those of MathOptInterface
     PrimalUnbounded
 )
 
-findStatus(::T) where T = Unknown
-findStatus(s::Symbol) = findStatus(Val{s})
+Status(::T) where T = Unknown
+Status(s::Symbol) = Status(Val{s})
 
-findStatus(i::Int) = ProblemStatus(i)
-
-findStatus(::Type{Val{:Infeasible}}) = PrimalInfeasible
-findStatus(::Type{Val{:Unbounded}}) = PrimalUnbounded
-findStatus(::Type{Val{:Optimal}}) = Optimal
+Status(::Type{Val{:Infeasible}}) = PrimalInfeasible
+Status(::Type{Val{:Unbounded}}) = PrimalUnbounded
+Status(::Type{Val{:Optimal}}) = Optimal

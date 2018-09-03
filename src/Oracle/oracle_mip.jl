@@ -20,7 +20,7 @@ mutable struct LindaOracleMIP <: AbstractLindaOracle
     # Result of last oracle call
     # Includes newly generated columns and associated data
     new_columns::Vector{Column}
-    status::ProblemStatus  # status of sub-problem
+    status::Status  # status of sub-problem
     pricing_dual_bound::Float64  # dual bound for sub-problem
 
     # TODO: Column pool (?)
@@ -93,7 +93,7 @@ function call_oracle!(
     MPB.setvartype!(sp, oracle.vartypes)
     MPB.optimize!(sp)
 
-    status = findStatus(MPB.status(sp))
+    status = Status(MPB.status(sp))
     oracle.status = status
 
     if status == Optimal

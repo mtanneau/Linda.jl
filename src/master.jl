@@ -57,7 +57,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
 
     # Current status of the RMP
     # As long as the RMP is infeasbile, Farkas pricing will be used
-    rmp_status::ProblemStatus  # Status of Restricted Master Problem
+    rmp_status::Status  # Status of Restricted Master Problem
 
 
     #===========================================================================
@@ -76,7 +76,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
             Farkas pricing fails to cut the infeasibility ray.
         - Unbounded if the RMP is unbounded
     =#
-    mp_status::ProblemStatus  # Status of MasterProblem
+    mp_status::Status  # Status of MasterProblem
 
     oracle::Oracle.AbstractLindaOracle  # Pricing oracle
     
@@ -214,7 +214,7 @@ Solve Restricted Master Problem, and update current dual iterate.
 function solve_rmp!(master::LindaMaster)
 
     MPB.optimize!(master.rmp)
-    rmp_status = findStatus(Val{MPB.status(master.rmp)})
+    rmp_status = Status(Val{MPB.status(master.rmp)})
     master.rmp_status = rmp_status
 
     # Update dual iterate
