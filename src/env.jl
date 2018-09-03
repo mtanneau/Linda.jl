@@ -44,6 +44,12 @@ end
 # TODO: use `getproperty` and `setproperty!` instead (> Julia 0.7)
 getindex(env::LindaEnv, name::Symbol) = get_param_value(Core.getfield(env, name))
 
+getindex(env::LindaEnv, ::Type{Val{:num_cols_rmp_max}}) = env.num_cols_rmp_max.val
+getindex(env::LindaEnv, ::Type{Val{:num_cgiter_max}}) = env.num_cgiter_max.val
+getindex(env::LindaEnv, ::Type{Val{:time_limit}}) = env.time_limit.val
+getindex(env::LindaEnv, ::Type{Val{:tol_reduced_cost}}) = env.tol_reduced_cost.val
+getindex(env::LindaEnv, ::Type{Val{:verbose}}) = env.verbose.val
+
 setindex!(env::LindaEnv, v, name::Symbol) = set_param_value!(Core.getfield(env, name), v)
 
 """
