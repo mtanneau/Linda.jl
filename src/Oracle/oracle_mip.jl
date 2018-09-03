@@ -60,7 +60,7 @@ mutable struct LindaOracleMIP <: AbstractLindaOracle
 
 end
 
-function call_oracle!(
+function query!(
     oracle::LindaOracleMIP,
     π::AbstractVector{Tv},
     σ::Real;

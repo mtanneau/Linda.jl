@@ -29,7 +29,7 @@ end
 # Returns
 - `cols::Vector{Column}`
 """
-function call_oracle!(
+function query!(
     pool::LindaOraclePool,
     π::AbstractVector{T1},
     σ::AbstractVector{T2};
@@ -55,7 +55,7 @@ function call_oracle!(
 
         o = pool.oracles[r]
         # solve sub-problem
-        call_oracle!(
+        query!(
             o, π, σ[r],
             farkas=farkas,
             tol_reduced_cost=tol_reduced_cost

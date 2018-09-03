@@ -42,7 +42,7 @@ function solve_colgen!(
 
         # Price
         tic()
-        Oracle.call_oracle!(
+        Oracle.query!(
             oracle, mp.π, mp.σ,
             farkas=farkas,
             tol_reduced_cost=env.tol_reduced_cost.val

@@ -61,7 +61,7 @@ oracle_infeas = Linda.Oracle.LindaOracleMIP(
 σ = 0.0
 
 # Bounded oracle
-Linda.Oracle.call_oracle!(oracle_bounded, π, σ)  # solve sub-problem
+Linda.Oracle.query!(oracle_bounded, π, σ)  # solve sub-problem
 status = Linda.Oracle.get_oracle_status(oracle_bounded)
 if status == Linda.Optimal
     # at least one column should have been generated
@@ -91,7 +91,7 @@ else
 end
 
 # Unbounded sub-problem
-Linda.Oracle.call_oracle!(oracle_unbound, π, σ)
+Linda.Oracle.query!(oracle_unbound, π, σ)
 status = Linda.Oracle.get_oracle_status(oracle_unbound)
 if status == Linda.PrimalUnbounded
     @test Linda.Oracle.get_num_new_columns(oracle_unbound) >= 1
@@ -115,7 +115,7 @@ else
 end
 
 # Infeasible sub-problem
-Linda.Oracle.call_oracle!(oracle_infeas, π, σ)
+Linda.Oracle.query!(oracle_infeas, π, σ)
 status = Linda.Oracle.get_oracle_status(oracle_infeas)
 @test typeof(status) == Linda.Status
 @test status == Linda.Unknown || status == Linda.PrimalInfeasible

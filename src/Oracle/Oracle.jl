@@ -24,11 +24,11 @@ abstract type AbstractLindaOracle end
 
 
 """
-    call_oracle!
+    query!
 
-Execute a call to the oracle.
+Execute a query to the oracle.
 """
-function call_oracle! end
+function query! end
 
 
 """
