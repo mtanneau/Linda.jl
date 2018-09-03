@@ -66,15 +66,18 @@ mutable struct LindaNumParam{T<:Real} <: AbstractLindaParam{T}
     
 end
 
+const LindaIntParam = LindaNumParam{Int}
+const LindaFloatParam = LindaNumParam{Float64}
+
 get_param_name(par::LindaNumParam) = par.name
 
 get_param_type(par::LindaNumParam{T}) where T = T
 
 get_param_value(par::LindaNumParam{T}) where T = par.val
 
-set_param_default!(par::LindaNumParam{T}) where T = (par.val = par.def_val)
+set_param_default!(par::LindaNumParam) = (par.val = par.def_val)
 
-function set_param_value!(par::LindaNumParam{T}, v::T) where{T<:Real}
+function set_param_value!(par::LindaNumParam, v::T) where{T<:Real}
 
     if !test_param_value(par, v)
         error("$(par.name) must be between $(par.min_val) and $(par.max_val).")
@@ -85,4 +88,4 @@ function set_param_value!(par::LindaNumParam{T}, v::T) where{T<:Real}
     return nothing
 end
 
-test_param_value(par::LindaNumParam{T}, v::T) where{T<:Real} = (par.min_val <= v <= par.max_val)
+test_param_value(par::LindaNumParam, v::T) where{T<:Real} = (par.min_val <= v <= par.max_val)
