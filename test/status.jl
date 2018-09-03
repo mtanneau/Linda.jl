@@ -1,4 +1,3 @@
-
 @test Linda.findStatus(:Infeasible) == Linda.PrimalInfeasible
 @test Linda.findStatus(:Unbounded) == Linda.PrimalUnbounded
 @test Linda.findStatus(:Optimal) == Linda.Optimal
