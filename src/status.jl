@@ -1,7 +1,7 @@
 """
     Status
 
-These status codes are based on those of MathOptInterface
+These Status codes are based on those of MathOptInterface
 - `PrimalFeasible`: A primal feasible solution has been found
 - `DualFeasible` : A dual-feasible solution has been found
 - `PrimalDualFeasible`: A primal- and a dual-feasible solutions have been found

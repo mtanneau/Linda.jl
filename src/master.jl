@@ -77,8 +77,6 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         - Unbounded if the RMP is unbounded
     =#
     mp_status::Status  # Status of MasterProblem
-
-    oracle::Oracle.AbstractLindaOracle  # Pricing oracle
     
     primal_lp_bound::Float64  # Primal bound for the linear (DW) relaxation
     primal_ip_bound::Float64  # Primal bound for the integer problem

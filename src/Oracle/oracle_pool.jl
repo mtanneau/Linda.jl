@@ -2,8 +2,11 @@
     LindaOraclePool
 
 Pool of multiple sub-problems.
+
+
 """
 mutable struct LindaOraclePool <: AbstractLindaOracle
+    "Number of oracles in the pool."
     n::Int  # Number of oracles (i.e. sub-problems)
 
     new_columns::Set{Column}
@@ -13,6 +16,19 @@ mutable struct LindaOraclePool <: AbstractLindaOracle
     LindaOraclePool(oracles) = new(size(oracles,1), Set{Column}(), -Inf, oracles)
 end
 
+"""
+    Compute a set of columns with negative reduced cost.
+
+# Arguments
+- `pool`: The pool of oracles to be called
+- `π`: Shadow prices (dual variables)
+- `σ`: Shadow marginal cost (dual variables)
+- `farkas`: Whether to perform Farkas pricing
+- `tol_reduced_cost`: Numerical tolerance for reduced costs
+
+# Returns
+- `cols::Vector{Column}`
+"""
 function call_oracle!(
     pool::LindaOraclePool,
     π::AbstractVector{T1},
@@ -20,7 +36,7 @@ function call_oracle!(
     farkas::Bool=false,
     tol_reduced_cost::Float64=1.0e-6
 ) where{T1<:Real, T2<:Real}
-    # println("\tPricing, Farkas=$farkas")
+
     pool.new_columns = Set{Column}()
 
     # Check dimensions

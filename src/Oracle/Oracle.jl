@@ -5,9 +5,7 @@ const MPB = MathProgBase
 
 import Linda:
     Column, get_reduced_cost,
-    Status,
-    Unknown, PrimalFeasible, DualFeasible, PrimalDualFeasible, Optimal, PrimalInfeasible, PrimalUnbounded,
-    LindaEnv
+    Status, Unknown, PrimalFeasible, DualFeasible, PrimalDualFeasible, Optimal, PrimalInfeasible, PrimalUnbounded
 
 export
     AbstractLindaOracle, call_oracle!, get_new_columns, get_sp_dual_bound
