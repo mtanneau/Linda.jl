@@ -15,7 +15,7 @@ const testdir = dirname(@__FILE__)
 const test_files = [
     # include test file name here (without .jl extension)
     "master",
-    "problemStatus",
+    "status",
     "oracle_mip",
     "colgen"
 ]
