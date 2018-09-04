@@ -48,6 +48,7 @@ add_initial_columns!(mp, m, R)
 env = Linda.LindaEnv()
 env[:verbose] = 1  # Activate iteration log
 env[:num_cgiter_max] = 10
+env[:num_columns_max] = 5
 
 # Solve problem with column generation
 Linda.solve_colgen!(env, mp, pool)

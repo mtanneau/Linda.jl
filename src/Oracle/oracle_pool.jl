@@ -3,21 +3,29 @@
 
 Pool of multiple sub-problems.
 
-
+# Attributes
+- `n`: Number of oracles (i.e., sub-problems) in the pool
+- `new_columns`: Set of columns (with negative reduced cost) that were generated
+    by the last query.
+- `status`: Pricing status of the current query
+- `sp_dual_bound`: The best known dual bound on the optimal value of the sub-problem
+- `oracles`: The list of oracles in the pool
 """
 mutable struct LindaOraclePool <: AbstractLindaOracle
-    "Number of oracles in the pool."
     n::Int  # Number of oracles (i.e. sub-problems)
 
     new_columns::Set{Column}
+    status::Status
     sp_dual_bound::Float64
+
     oracles::Vector{AbstractLindaOracle}
 
-    LindaOraclePool(oracles) = new(size(oracles,1), Set{Column}(), -Inf, oracles)
+    LindaOraclePool(oracles) = new(size(oracles,1), Set{Column}(), Unknown, -Inf, oracles)
 end
 
 """
-    Compute a set of columns with negative reduced cost.
+    query!(pool, π, σ; kwargs...)    
+Compute a set of columns with negative reduced cost.
 
 # Arguments
 - `pool`: The pool of oracles to be called
@@ -25,16 +33,20 @@ end
 - `σ`: Shadow marginal cost (dual variables)
 - `farkas`: Whether to perform Farkas pricing
 - `tol_reduced_cost`: Numerical tolerance for reduced costs
+- `num_columns_max`: Maximum number of columns to be generated before pricing stops.
+- `prop_sp_priced_max`: Maximum proportion of sub-problems to be solved before pricing can stop.
 
 # Returns
-- `cols::Vector{Column}`
+- `status`: Termination status
 """
 function query!(
     pool::LindaOraclePool,
     π::AbstractVector{T1},
     σ::AbstractVector{T2};
     farkas::Bool=false,
-    tol_reduced_cost::Float64=1.0e-6
+    tol_reduced_cost::Float64=1.0e-6,
+    num_columns_max::Int=typemax(Int64),
+    prop_sp_priced_max::Float64=1.0
 ) where{T1<:Real, T2<:Real}
 
     pool.new_columns = Set{Column}()
@@ -67,7 +79,7 @@ function query!(
         if s == PrimalInfeasible
             pool.status = PrimalInfeasible
             warn("Infeasible sub-problem")
-            return nothing
+            return pool.status
         end
 
         # Update Lagrange bound
@@ -84,21 +96,23 @@ function query!(
             end
             best_red_cost = min(rc, best_red_cost)
 
-            if length(pool.new_columns) >= (0.1*pool.n) && (nsp_priced < 0.50*pool.n)
-                # partial pricing
-                # println("\tEarly pricing return")
+            if length(pool.new_columns) >= num_columns_max
+                # early return
                 pool.sp_dual_bound = -Inf
-                return nothing
+                return pool.status
             end
         end
         
     end
 
+    # Pricing ended because all sub-problems were solved to optimality
+    pool.status = Optimal
+
     # println("\tNCols: ", length(pool.new_columns))
     # println("\trc=: ", best_red_cost)
     # println("\tPriced:", nsp_priced)
 
-    return nothing
+    return pool.status
      
 end
 

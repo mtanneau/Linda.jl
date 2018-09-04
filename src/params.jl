@@ -49,11 +49,11 @@ Check whether value `v` is admissible for given parameter.
 function test_param_value end
 
 """
-    LindaNumParam{T<:Real}
+    LindaRealParam{T<:Real}
 
 Container for numerical (real-valued) parameters.
 """
-mutable struct LindaNumParam{T<:Real} <: AbstractLindaParam{T}
+mutable struct LindaRealParam{T<:Real} <: AbstractLindaParam{T}
     name::Symbol  # Name of the parameter
 
     val::T  # Current parameter value
@@ -61,28 +61,28 @@ mutable struct LindaNumParam{T<:Real} <: AbstractLindaParam{T}
     max_val::T  # Maximum parameter value
     def_val::T  # Default value
 
-    LindaNumParam(name::Symbol, vdef::T, vmin::T, vmax::T) where{T<:Real} =
+    LindaRealParam(name::Symbol, vdef::T, vmin::T, vmax::T) where{T<:Real} =
         new{T}(name, vdef, vmin, vmax, vdef)
     
 end
 
-const LindaIntParam = LindaNumParam{Int}
-const LindaFloatParam = LindaNumParam{Float64}
+const LindaIntParam = LindaRealParam{Int}
+const LindaFloatParam = LindaRealParam{Float64}
 
-get_param_name(par::LindaNumParam) = par.name
+get_param_name(par::LindaRealParam) = par.name
 
-get_param_type(par::LindaNumParam{T}) where T = T
+get_param_type(par::LindaRealParam{T}) where T = T
 
-get_param_value(par::LindaNumParam{T}) where T = par.val
+get_param_value(par::LindaRealParam{T}) where T = par.val
 
-set_param_default!(par::LindaNumParam) = (par.val = par.def_val)
+set_param_default!(par::LindaRealParam) = (par.val = par.def_val)
 
 """
     set_param_value!(p, v)
 
 Set value of parameter `p` to `v`. Raises an error if `v` is not an admissible value.
 """
-function set_param_value!(p::LindaNumParam, v::T) where{T<:Real}
+function set_param_value!(p::LindaRealParam, v::T) where{T<:Real}
 
     if test_param_value(p, v)
         p.val = v
@@ -98,4 +98,4 @@ end
 
 Return whether `v` is an admissible value for parameter `p` 
 """
-test_param_value(p::LindaNumParam, v::T) where{T<:Real} = (p.min_val <= v <= p.max_val)
+test_param_value(p::LindaRealParam, v::T) where{T<:Real} = (p.min_val <= v <= p.max_val)

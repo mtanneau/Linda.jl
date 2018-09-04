@@ -65,7 +65,8 @@ function query!(
     π::AbstractVector{Tv},
     σ::Real;
     farkas::Bool=false,
-    tol_reduced_cost::Float64=1.0e-6
+    tol_reduced_cost::Float64=1.0e-6,
+    num_columns_max::Int=typemax(Int64)
 ) where{Tv<:Real}
 
     # Dimension checks
@@ -93,10 +94,9 @@ function query!(
     MPB.setvartype!(sp, oracle.vartypes)
     MPB.optimize!(sp)
 
-    status = Status(MPB.status(sp))
-    oracle.status = status
+    oracle.status = Status(MPB.status(sp))
 
-    if status == Optimal
+    if oracle.status == Optimal
         # Sub-problem solved to optimality
         oracle.pricing_dual_bound = MPB.getobjbound(sp)
         x = MPB.getsolution(sp)
@@ -109,12 +109,12 @@ function query!(
             )
         ]    
         
-    elseif status == PrimalInfeasible
+    elseif oracle.status == PrimalInfeasible
         # Sub-problem is infeasible
         oracle.new_columns = Vector{Column}()
         oracle.pricing_dual_bound = Inf
 
-    elseif status == PrimalFeasible || status == PrimalDualFeasible
+    elseif oracle.status == PrimalFeasible || oracle.status == PrimalDualFeasible
         # A primal solution is available
         oracle.pricing_dual_bound = MPB.getobjbound(sp)
         x = MPB.getsolution(sp)
@@ -127,7 +127,7 @@ function query!(
             )
         ]
 
-    elseif status == PrimalUnbounded
+    elseif oracle.status == PrimalUnbounded
 
         #=
             TODO [Mathieu, 27/07/2018]
@@ -161,7 +161,7 @@ function query!(
         warn("Pricing status $(status) not handled")
     end
 
-    return nothing
+    return oracle.status
 end
 
 get_oracle_status(oracle::LindaOracleMIP) = oracle.status

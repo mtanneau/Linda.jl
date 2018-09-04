@@ -45,7 +45,8 @@ function solve_colgen!(
         Oracle.query!(
             oracle, mp.π, mp.σ,
             farkas=farkas,
-            tol_reduced_cost=env.tol_reduced_cost.val
+            tol_reduced_cost=env.tol_reduced_cost.val,
+            num_columns_max=env.num_columns_max.val
         )
         time_sp_total += toq()
 
