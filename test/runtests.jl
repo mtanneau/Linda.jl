@@ -1,14 +1,12 @@
+using Random
+using LinearAlgebra
+using Test
+
 import Linda
 import Cbc: CbcSolver
 import Clp: ClpSolver
 import MathProgBase
 const MPB = MathProgBase
-
-@static if VERSION < v"0.7.0-DEV.2005"
-    using Base.Test
-else
-    using Test
-end
 
 const testdir = dirname(@__FILE__)
 

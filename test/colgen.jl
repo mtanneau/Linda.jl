@@ -10,7 +10,7 @@ function add_initial_columns!(mp, m, R)
 end
 
 # Create initial RMP
-srand(0)
+Random.seed!(0)
 n = 20  # original dimension
 m = 1  # number of linking constraints
 R = 10  # number of sub-problems
