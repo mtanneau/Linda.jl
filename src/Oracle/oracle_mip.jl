@@ -158,7 +158,7 @@ function query!(
 
     else
         # TODO
-        @warn("Pricing status $(status) not handled")
+        @warn("Pricing status $(oracle.status) not handled")
     end
 
     return oracle.status
