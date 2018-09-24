@@ -1,5 +1,8 @@
 module Linda
 
+using LinearAlgebra
+using Printf
+
 # package code goes here
 include("env.jl")
 include("status.jl")

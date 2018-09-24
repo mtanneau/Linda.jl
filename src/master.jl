@@ -112,13 +112,13 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         mp = new{RMP}()
 
         mp.num_columns_rmp = 0
-        mp.active_columns = Vector{Column}(0)
+        mp.active_columns = Vector{Column}(undef, 0)
 
         mp.num_constr_cvxty = num_constr_cvxty
         mp.num_constr_link = num_constr_link
         mp.rhs_constr_link = rhs_constr_link
-        mp.π = Vector{Float64}(num_constr_link)
-        mp.σ = Vector{Float64}(num_constr_cvxty)
+        mp.π = Vector{Float64}(undef, num_constr_link)
+        mp.σ = Vector{Float64}(undef, num_constr_cvxty)
 
         mp.rmp = rmp
         mp.rmp_status = Unknown

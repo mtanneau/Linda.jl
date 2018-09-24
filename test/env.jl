@@ -9,7 +9,7 @@ env = Linda.LindaEnv()
 @test !Linda.test_param_value(env.verbose, -1)
 
 # Test that `getindex(env, ::Type{Val{:###}}` have properly been set
-for s in fieldnames(env)
+for s in fieldnames(Linda.LindaEnv)
     @test env[Val{s}] == env[s]
 end
 
@@ -33,7 +33,7 @@ catch e
 end
 
 Linda.reset!(env)
-for s in fieldnames(env)
+for s in fieldnames(Linda.LindaEnv)
     p = Core.getfield(env, s)
     @test env[s] == p.def_val
 end

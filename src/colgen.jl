@@ -11,11 +11,10 @@ function solve_colgen!(
 
     # Pre-optimization stuff
     n_cg_iter::Int = 0
+    time_start = time()
     time_mp_total::Float64 = 0.0
     time_sp_total::Float64 = 0.0
     time_cg_total::Float64 = 0.0
-
-    tic()  # start
 
     if env[Val{:verbose}] == 1
         println(" Itn    Primal Obj      Dual Obj        NCols    Time (s)")
@@ -24,9 +23,9 @@ function solve_colgen!(
     # Main CG loop
     while n_cg_iter < env[Val{:num_cgiter_max}]
         # Solve RMP, update dual variables
-        tic()
+        t0 = time()
         solve_rmp!(mp)
-        time_mp_total += toq()
+        time_mp_total += time() - t0
 
         if mp.rmp_status == Optimal
             farkas=false
@@ -41,14 +40,14 @@ function solve_colgen!(
         end
 
         # Price
-        tic()
+        t0 = time()
         Oracle.query!(
             oracle, mp.π, mp.σ,
             farkas=farkas,
             tol_reduced_cost=env.tol_reduced_cost.val,
             num_columns_max=env.num_columns_max.val
         )
-        time_sp_total += toq()
+        time_sp_total += time() - t0
 
         cols = Oracle.get_new_columns(oracle)
         lagrange_lb = (
@@ -78,7 +77,7 @@ function solve_colgen!(
         if mp_gap <= 10.0 ^-4
             mp.mp_status = Optimal
             
-            time_cg_total += toq()
+            time_cg_total += time() - time_start
             if env[Val{:verbose}] == 1
                 println("Root relaxation solved.")
                 println("Total time / MP: ", time_mp_total)
@@ -91,7 +90,7 @@ function solve_colgen!(
         elseif farkas && length(cols) == 0
             
             mp.mp_status = PrimalInfeasible
-            time_cg_total += toq()
+            time_cg_total += time() - time_start
             if env[Val{:verbose}] == 1
                 println("Master is infeasible.")
                 println("Total time / MP: ", time_mp_total)
@@ -108,7 +107,7 @@ function solve_colgen!(
         n_cg_iter += 1
     end
 
-    time_cg_total += toq()
+    time_cg_total += time() - time_start
     if env[Val{:verbose}] == 1
         println("Total time / MP: ", time_mp_total)
         println("Total time / SP: ", time_sp_total)

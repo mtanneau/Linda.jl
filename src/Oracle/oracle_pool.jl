@@ -78,7 +78,7 @@ function query!(
         s = get_oracle_status(o)
         if s == PrimalInfeasible
             pool.status = PrimalInfeasible
-            warn("Infeasible sub-problem")
+            @warn("Infeasible sub-problem")
             return pool.status
         end
 

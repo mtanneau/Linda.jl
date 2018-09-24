@@ -76,7 +76,7 @@ end
 Reset all parameters to their default values.
 """
 function reset!(env)
-    for s in fieldnames(env)
+    for s in fieldnames(LindaEnv)
         set_param_default!(Core.getfield(env, s))
     end
     return nothing
