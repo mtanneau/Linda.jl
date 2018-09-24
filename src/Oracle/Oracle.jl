@@ -1,5 +1,7 @@
 module Oracle
 
+using LinearAlgebra
+
 import MathProgBase
 const MPB = MathProgBase
 

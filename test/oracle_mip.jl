@@ -85,7 +85,7 @@ elseif status == Linda.PrimalFeasible
     @test Linda.Oracle.get_sp_dual_bound(oracle_bounded) <= -1.0 - π[1]
 
 elseif status == Linda.Unknown
-    warn("Bounded oracle: Solver should have solved problem")
+    @warn("Bounded oracle: Solver should have solved problem")
 else
     error("")
 end
@@ -109,7 +109,7 @@ elseif status == Linda.PrimalFeasible
     @test Linda.Oracle.get_sp_dual_bound(oracle_unbound) <= -1.0 - π[1]
 
 elseif status == Linda.Unknown
-    warn("Unbounded returned Unknown status")
+    @warn("Unbounded returned Unknown status")
 else
     error("")
 end

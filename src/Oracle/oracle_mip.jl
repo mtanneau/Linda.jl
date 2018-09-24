@@ -138,7 +138,7 @@ function query!(
             may detect unboundedness but do not give access to an unbounded ray
             (e.g. if unboundedness is detected at presolve)
         =#
-        warn("Unbounded sub-problem. Currently not supported.")
+        @warn("Unbounded sub-problem. Currently not supported.")
         oracle.status = Unknown
         
         #=
@@ -158,7 +158,7 @@ function query!(
 
     else
         # TODO
-        warn("Pricing status $(status) not handled")
+        @warn("Pricing status $(status) not handled")
     end
 
     return oracle.status
