@@ -1,4 +1,4 @@
-using Linda
+import Linda
 import Cbc: CbcSolver
 import Clp: ClpSolver
 import MathProgBase
@@ -13,9 +13,12 @@ end
 const testdir = dirname(@__FILE__)
 
 const test_files = [
-    "simple_subproblem",
-    "simple_masterproblem",
     # include test file name here (without .jl extension)
+    "env",
+    "master",
+    "status",
+    "oracle_mip",
+    "colgen"
 ]
 
 for f in test_files
