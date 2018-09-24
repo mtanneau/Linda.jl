@@ -3,8 +3,8 @@ using LinearAlgebra
 using Test
 
 import Linda
-import Cbc: CbcSolver
-import Clp: ClpSolver
+import GLPKMathProgInterface:
+    GLPKSolverLP, GLPKSolverMIP
 import MathProgBase
 const MPB = MathProgBase
 

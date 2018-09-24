@@ -4,7 +4,6 @@ n = 1  # number of items
 c = [5.0]  # values of items
 w = 5.0*ones(1, 1)  # weights of items, as a 1-row matrix
 v = 10  # total capacity
-solver_mip = CbcSolver()
 
 # Bounded sub-problem
 # Min -x
@@ -20,7 +19,7 @@ oracle_bounded = Linda.Oracle.LindaOracleMIP(
     [:Bin],
     zeros(1),
     ones(1),
-    solver_mip
+    GLPKSolverMIP()
 )
 
 # Unbounded sub-problem
@@ -37,7 +36,7 @@ oracle_unbound = Linda.Oracle.LindaOracleMIP(
     [:Cont],
     zeros(1),
     Inf * ones(1),
-    solver_mip
+    GLPKSolverMIP()
 )
 
 # Min -x
@@ -53,7 +52,7 @@ oracle_infeas = Linda.Oracle.LindaOracleMIP(
     [:Bin],
     zeros(1),
     ones(1),
-    solver_mip
+    GLPKSolverMIP()
 )
 
 # Dual variables

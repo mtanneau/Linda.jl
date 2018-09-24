@@ -29,7 +29,7 @@ oracles = [
         [:Bin for _ in 1:n],
         zeros(n),
         ones(n),
-        CbcSolver()
+        GLPKSolverMIP()
     )
     for r in 1:R
 ]
@@ -40,7 +40,7 @@ pool = Linda.Oracle.LindaOraclePool(oracles)
 # Instanciate MP
 mp = Linda.LindaMaster(
     R, m, b,
-    ClpSolver()
+    GLPKSolverLP()
 )
 add_initial_columns!(mp, m, R)
 
