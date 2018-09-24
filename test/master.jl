@@ -31,7 +31,7 @@ function add_initial_columns!(mp, m, R)
 end
 
 # Create initial RMP
-srand(0)
+Random.seed!(0)
 m = 2  # number of linking constraints
 R = 2  # number of sub-problems
 b = zeros(m)  # Right-hand side of linking constraints
