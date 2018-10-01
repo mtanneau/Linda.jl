@@ -11,13 +11,15 @@ function solve_colgen!(
 
     # Pre-optimization stuff
     n_cg_iter::Int = 0
+    num_bar_iter::Int = 0
+    num_splx_iter::Int = 0
     time_start = time()
     time_mp_total::Float64 = 0.0
     time_sp_total::Float64 = 0.0
     time_cg_total::Float64 = 0.0
 
     if env[Val{:verbose}] == 1
-        println(" Itn    Primal Obj      Dual Obj        NCols    Time (s)")
+        println(" Itn    Primal Obj      Dual Obj        NCols        (MP)     (SP)     (CG)")
     end
 
     # Main CG loop
@@ -26,6 +28,8 @@ function solve_colgen!(
         t0 = time()
         solve_rmp!(mp)
         time_mp_total += time() - t0
+        num_bar_iter += MPB.getbarrieriter(mp.rmp)
+        num_splx_iter += MPB.getsimplexiter(mp.rmp)
 
         if mp.rmp_status == Optimal
             farkas=false
@@ -58,6 +62,7 @@ function solve_colgen!(
 
         # Log
         # Iteration count
+        time_cg_total = time() - time_start
         if env[Val{:verbose}] == 1
             @printf("%4d", n_cg_iter)
             # Primal and Dual objectives
@@ -65,7 +70,13 @@ function solve_colgen!(
             @printf("%+16.7e", mp.dual_bound)
             # RMP stats
             @printf("%10.0f", mp.num_columns_rmp)  # number of columns in RMP
-            @printf("%9.2f", time_mp_total + time_sp_total)
+            @printf("%9.2f", time_mp_total)
+            @printf("%9.2f", time_sp_total)
+            @printf("%9.2f", time_cg_total)
+            @printf("%8d", MPB.getbarrieriter(mp.rmp))
+            @printf("%6d", num_bar_iter)
+            @printf("%10d", MPB.getsimplexiter(mp.rmp))
+            @printf("%8d", num_splx_iter)
             print("\n")
         end
 
@@ -77,7 +88,7 @@ function solve_colgen!(
         if mp_gap <= 10.0 ^-4
             mp.mp_status = Optimal
             
-            time_cg_total += time() - time_start
+            time_cg_total = time() - time_start
             if env[Val{:verbose}] == 1
                 println("Root relaxation solved.")
                 println("Total time / MP: ", time_mp_total)
@@ -90,7 +101,7 @@ function solve_colgen!(
         elseif farkas && length(cols) == 0
             
             mp.mp_status = PrimalInfeasible
-            time_cg_total += time() - time_start
+            time_cg_total = time() - time_start
             if env[Val{:verbose}] == 1
                 println("Master is infeasible.")
                 println("Total time / MP: ", time_mp_total)
@@ -107,7 +118,7 @@ function solve_colgen!(
         n_cg_iter += 1
     end
 
-    time_cg_total += time() - time_start
+    time_cg_total = time() - time_start
     if env[Val{:verbose}] == 1
         println("Total time / MP: ", time_mp_total)
         println("Total time / SP: ", time_sp_total)
