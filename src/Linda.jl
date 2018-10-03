@@ -12,6 +12,7 @@ include("Oracle/Oracle.jl")
 
 include("master.jl")
 include("colgen.jl")
+include("pdcgm.jl")
 
 
 end # module
