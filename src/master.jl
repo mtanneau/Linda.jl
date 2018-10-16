@@ -24,6 +24,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
             column is added to / removed from the RMP
         
     =#
+    num_var_link::Int       # Number of linking variables (including artificial ones)
     num_columns_rmp::Int  # Number of columns currently in RMP
     active_columns::Vector{Column}  # Active columns
 
@@ -87,18 +88,21 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
     #===========================================================================
         Constructor
     ===========================================================================#
-    
+
     function LindaMaster(
-        rmp::RMP,
         num_constr_cvxty::Int,
         num_constr_link::Int,
-        rhs_constr_link::AbstractVector{Tv}
+        rhs_constr_link::AbstractVector{Tv},
+        num_var_link::Int,
+        initial_columns::Vector{Column},
+        rmp::RMP,
     ) where{RMP<:MPB.AbstractMathProgModel, Tv<:Real}
 
         # Dimension check
         n = MPB.numvar(rmp)
-        n == (2 * num_constr_link) || throw(ErrorException(
-            "RMP has $(n) variables instead of $(2*num_constr_link)"
+        ncols = length(initial_columns)
+        n == (num_var_link + ncols) || throw(ErrorException(
+            "RMP has $(n) variables instead of $(num_var_link + ncols)"
         ))
         m = MPB.numconstr(rmp)
         m == (num_constr_cvxty + num_constr_link) || throw(ErrorException(
@@ -111,18 +115,23 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         # Instanciate model
         mp = new{RMP}()
 
-        mp.num_columns_rmp = 0
-        mp.active_columns = Vector{Column}(undef, 0)
+        # RMP columns
+        mp.num_var_link = num_var_link
+        mp.num_columns_rmp = ncols
+        mp.active_columns = initial_columns
 
+        # RMP constraints
         mp.num_constr_cvxty = num_constr_cvxty
         mp.num_constr_link = num_constr_link
-        mp.rhs_constr_link = rhs_constr_link
+        mp.rhs_constr_link = copy(rhs_constr_link)
         mp.π = Vector{Float64}(undef, num_constr_link)
         mp.σ = Vector{Float64}(undef, num_constr_cvxty)
 
+        # Other RMP info
         mp.rmp = rmp
         mp.rmp_status = Unknown
 
+        # Column-Generation info
         mp.mp_status = Unknown
         mp.primal_lp_bound = Inf
         mp.primal_ip_bound = Inf
@@ -148,13 +157,13 @@ function LindaMaster(
     rmp = MPB.LinearQuadraticModel(lp_solver)
     # Add constraints
     for r in 1:num_constr_cvxty
-        MPB.addconstr!(rmp, Vector{Float64}(), Vector{Float64}(), 1.0, 1.0)
+        MPB.addconstr!(rmp, Float64[], Float64[], 1.0, 1.0)
     end
     for i in 1:num_constr_link
         MPB.addconstr!(
             rmp,
-            Vector{Float64}(),
-            Vector{Float64}(),
+            Float64[],
+            Float64[],
             rhs_constr_link[i],
             rhs_constr_link[i]
         )
@@ -162,29 +171,35 @@ function LindaMaster(
     end
 
     # Add artificial variables
+    num_var_link = 0
     for i in 1:num_constr_link
         if senses[i] == '='
             # Artificial slack and surplus
             MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
             MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
+            num_var_link += 2
         elseif senses[i] == '<'
             # Regular slack ; artificial surplus
             MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, Inf, 0.0) # slack
             MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
+            num_var_link += 2
         elseif senses[i] == '>'
             # Artificial slack ; regular surplus
             MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
             MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, Inf, 0.0) # surplus
+            num_var_link += 2
         else
-            error("Wrong input $(senses[i])")
+            error("Unknown sense for constraint $i: `$(senses[i])`")
         end
     end
 
     mp = LindaMaster(
-        rmp,
         num_constr_cvxty,
         num_constr_link,
-        rhs_constr_link
+        rhs_constr_link,
+        num_var_link,
+        Column[],
+        rmp
     )
 
     return mp
@@ -212,7 +227,7 @@ Solve Restricted Master Problem, and update current dual iterate.
 function solve_rmp!(master::LindaMaster)
 
     MPB.optimize!(master.rmp)
-    rmp_status = Status(Val{MPB.status(master.rmp)})
+    rmp_status = Status(Val(MPB.status(master.rmp)))
     master.rmp_status = rmp_status
 
     # Update dual iterate
