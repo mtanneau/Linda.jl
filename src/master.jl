@@ -118,7 +118,7 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         # RMP columns
         mp.num_var_link = num_var_link
         mp.num_columns_rmp = ncols
-        mp.active_columns = initial_columns
+        mp.active_columns = deepcopy(initial_columns)
 
         # RMP constraints
         mp.num_constr_cvxty = num_constr_cvxty
