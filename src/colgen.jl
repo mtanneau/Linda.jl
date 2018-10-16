@@ -65,7 +65,11 @@ function solve_colgen!(
             @printf("%+16.7e", mp.dual_bound)
             # RMP stats
             @printf("%10.0f", mp.num_columns_rmp)  # number of columns in RMP
-            @printf("%9.2f", time_mp_total + time_sp_total)
+            @printf("%9.2f", time_mp_total)
+            @printf("%9.2f", time_sp_total)
+            @printf("%9.2f", time() - time_start)
+            @printf("%9d", MPB.getbarrieriter(mp.rmp))
+            @printf("%9d", MPB.getsimplexiter(mp.rmp))
             print("\n")
         end
 
