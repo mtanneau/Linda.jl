@@ -17,7 +17,7 @@ function solve_colgen!(
     time_cg_total::Float64 = 0.0
 
     if env[Val{:verbose}] == 1
-        println(" Itn    Primal Obj      Dual Obj        NCols    Time (s)")
+        println("Itn     Primal Obj        Dual Obj         NCols    MP(s)    SP(s)   Tot(s)  BarIter  SpxIter")
     end
 
     # Main CG loop
