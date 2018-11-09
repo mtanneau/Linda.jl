@@ -247,6 +247,12 @@ function solve_rmp!(master::LindaMaster)
 
         # update dual variables
         y = MPB.getinfeasibilityray(master.rmp)
+        # Normalize dual ray, for stability purposes
+        nrm = norm(y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)], 1)
+        if nrm > 1e-6
+            y ./= nrm
+        end
+        
         master.σ .= y[1:master.num_constr_cvxty]
         master.π .= y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)]
 
