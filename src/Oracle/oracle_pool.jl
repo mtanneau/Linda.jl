@@ -46,7 +46,8 @@ function query!(
     farkas::Bool=false,
     tol_reduced_cost::Float64=1.0e-6,
     num_columns_max::Int=typemax(Int64),
-    prop_sp_priced_max::Float64=1.0
+    prop_sp_priced_max::Float64=1.0,
+    log::Dict=Dict()
 ) where{T1<:Real, T2<:Real}
 
     pool.new_columns = Set{Column}()
@@ -61,7 +62,6 @@ function query!(
 
     # price each sub-problem
     # go through sub-problems in random order
-    nsp_priced = 0
     perm = randperm(pool.n)
     for r in perm
 
@@ -72,13 +72,13 @@ function query!(
             farkas=farkas,
             tol_reduced_cost=tol_reduced_cost
         )
-        nsp_priced += 1
+        log[:nsp_priced] += 1
 
         # Check for infeasible sub-problem
         s = get_oracle_status(o)
         if s == PrimalInfeasible
             pool.status = PrimalInfeasible
-            @warn("Infeasible sub-problem")
+            @warn("Sub-problem $r is infeasible.")
             return pool.status
         end
 
@@ -107,10 +107,6 @@ function query!(
 
     # Pricing ended because all sub-problems were solved to optimality
     pool.status = Optimal
-
-    # println("\tNCols: ", length(pool.new_columns))
-    # println("\trc=: ", best_red_cost)
-    # println("\tPriced:", nsp_priced)
 
     return pool.status
      

@@ -86,7 +86,8 @@ function query!(
     σ::Real;
     farkas::Bool=false,
     tol_reduced_cost::Float64=1.0e-6,
-    num_columns_max::Int=typemax(Int64)
+    num_columns_max::Int=typemax(Int64),
+    log=Dict()
 ) where{Tv<:Real}
 
     # Dimension checks

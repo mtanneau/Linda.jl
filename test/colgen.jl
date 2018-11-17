@@ -1,3 +1,8 @@
+import GLPK, GLPKMathProgInterface
+
+MPB.getbarrieriter(m::GLPKMathProgInterface.GLPKInterfaceLP.GLPKMathProgModelLP) = 0
+MPB.getsimplexiter(m::GLPKMathProgInterface.GLPKInterfaceLP.GLPKMathProgModelLP) = 0
+
 function add_initial_columns!(mp, m, R)
 
     # Add an initial set of columns
