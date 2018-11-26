@@ -115,9 +115,16 @@ function solve_colgen!(
         n_cg_iter += 1
     end
 
+    # Logs
     cg_log[:time_cg_total] = time() - time_start
+    cg_log[:dual_bound] = mp.dual_bound
+    cg_log[:primal_bound] = mp.primal_lp_bound
+    cg_log[:n_cg_iter] = n_cg_iter
+    cg_log[:status] = mp.mp_status
+    cg_log[:num_cols_tot] = mp.num_columns_rmp
 
     if env[Val{:verbose}] == 1
+        println()
         @printf("Total time / MP: %.2fs\n", cg_log[:time_mp_total])
         @printf("Total time / SP: %.2fs\n", cg_log[:time_sp_total])
         @printf("Total time / CG: %.2fs\n", cg_log[:time_cg_total])
