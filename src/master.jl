@@ -94,9 +94,9 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         num_constr_link::Int,
         rhs_constr_link::AbstractVector{Tv},
         num_var_link::Int,
-        initial_columns::Vector{Column},
+        initial_columns::Vector{Tc},
         rmp::RMP,
-    ) where{RMP<:MPB.AbstractMathProgModel, Tv<:Real}
+    ) where{RMP<:MPB.AbstractMathProgModel, Tv<:Real, Tc<:Column}
 
         # Dimension check
         n = MPB.numvar(rmp)
