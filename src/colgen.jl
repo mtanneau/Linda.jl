@@ -29,6 +29,12 @@ function solve_colgen!(
     # Main CG loop
     while n_cg_iter < env[Val{:num_cgiter_max}]
 
+        # Check for time limit
+        if (time() - time_start) >= env[:time_limit]
+            env[Val{:verbose}] == 1 && println("Time limit reached.")
+            break
+        end
+
         # Solve RMP, update dual variables
         t0 = time()
         solve_rmp!(mp)
@@ -43,12 +49,6 @@ function solve_colgen!(
             break
         else
             @warn("RMP status $(mp.rmp_status) not handled.")
-            break
-        end
-
-        # Check for time limit
-        if (time() - time_start) >= env[:time_limit]
-            env[Val{:verbose}] == 1 && println("Time limit reached.")
             break
         end
 
