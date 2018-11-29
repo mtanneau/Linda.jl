@@ -6,37 +6,50 @@ Column-Generation algorithm.
 function solve_colgen!(
     env::LindaEnv,
     mp::LindaMaster{RMP},
-    oracle::Oracle.AbstractLindaOracle
+    oracle::Oracle.AbstractLindaOracle;
+    cg_log::Dict=Dict()
 ) where{RMP<:MPB.AbstractMathProgModel}
 
     # Pre-optimization stuff
     n_cg_iter::Int = 0
     time_start = time()
-    time_mp_total::Float64 = 0.0
-    time_sp_total::Float64 = 0.0
-    time_cg_total::Float64 = 0.0
+    cg_log[:time_mp_total] = 0.0
+    cg_log[:time_sp_total] = 0.0
+    cg_log[:time_cg_total] = 0.0
+
+    cg_log[:num_iter_bar] = 0  # Total number of barrier inner iterations
+    cg_log[:num_iter_spx] = 0  # Total number of simplex inner iterations
+
+    cg_log[:nsp_priced] = 0  # Number of calls to sub-problems
 
     if env[Val{:verbose}] == 1
-        println(" Itn    Primal Obj      Dual Obj        NCols    Time (s)")
+        println("Itn     Primal Obj        Dual Obj         NCols    MP(s)    SP(s)   Tot(s)  BarIter  SpxIter")
     end
 
     # Main CG loop
     while n_cg_iter < env[Val{:num_cgiter_max}]
+
+        # Check for time limit
+        if (time() - time_start) >= env[:time_limit]
+            env[Val{:verbose}] == 1 && println("Time limit reached.")
+            break
+        end
+
         # Solve RMP, update dual variables
         t0 = time()
         solve_rmp!(mp)
-        time_mp_total += time() - t0
+        cg_log[:time_mp_total] += time() - t0
 
         if mp.rmp_status == Optimal
             farkas=false
         elseif mp.rmp_status == PrimalInfeasible
             farkas=true
         elseif mp.rmp_status == PrimalUnbounded
-            println("Master Problem is unbounded.")
-            return mp.mp_status
+            env[Val{:verbose}] == 1 && println("Master Problem is unbounded.")
+            break
         else
-            error("RMP status $(mp.rmp_status) not handled. Exiting.")
-            return mp.mp_status
+            @warn("RMP status $(mp.rmp_status) not handled.")
+            break
         end
 
         # Price
@@ -45,9 +58,10 @@ function solve_colgen!(
             oracle, mp.π, mp.σ,
             farkas=farkas,
             tol_reduced_cost=env.tol_reduced_cost.val,
-            num_columns_max=env.num_columns_max.val
+            num_columns_max=env.num_columns_max.val,
+            log=cg_log
         )
-        time_sp_total += time() - t0
+        cg_log[:time_sp_total] += time() - t0
 
         cols = Oracle.get_new_columns(oracle)
         lagrange_lb = (
@@ -55,6 +69,9 @@ function solve_colgen!(
             + Oracle.get_sp_dual_bound(oracle)
         )  # Compute Lagrange lower bound
         mp.dual_bound = lagrange_lb > mp.dual_bound ? lagrange_lb : mp.dual_bound
+
+        cg_log[:num_iter_bar] += MPB.getbarrieriter(mp.rmp)
+        cg_log[:num_iter_spx] += MPB.getsimplexiter(mp.rmp)
 
         # Log
         # Iteration count
@@ -65,8 +82,13 @@ function solve_colgen!(
             @printf("%+16.7e", mp.dual_bound)
             # RMP stats
             @printf("%10.0f", mp.num_columns_rmp)  # number of columns in RMP
-            @printf("%9.2f", time_mp_total + time_sp_total)
+            @printf("%9.2f", cg_log[:time_mp_total])
+            @printf("%9.2f", cg_log[:time_sp_total])
+            @printf("%9.2f", time() - time_start)
+            @printf("%9d", cg_log[:num_iter_bar])
+            @printf("%9d", cg_log[:num_iter_spx])
             print("\n")
+            flush(Base.stdout)
         end
 
         # Check duality gap
@@ -77,28 +99,21 @@ function solve_colgen!(
         if mp_gap <= 10.0 ^-4
             mp.mp_status = Optimal
             
-            time_cg_total += time() - time_start
+            # time_cg_total += time() - time_start
             if env[Val{:verbose}] == 1
                 println("Root relaxation solved.")
-                println("Total time / MP: ", time_mp_total)
-                println("Total time / SP: ", time_sp_total)
-                println("Total time / CG: ", time_cg_total)
             end
             
-            return mp.mp_status
+            break
 
         elseif farkas && length(cols) == 0
             
             mp.mp_status = PrimalInfeasible
-            time_cg_total += time() - time_start
+            # time_cg_total += time() - time_start
             if env[Val{:verbose}] == 1
-                println("Master is infeasible.")
-                println("Total time / MP: ", time_mp_total)
-                println("Total time / SP: ", time_sp_total)
-                println("Total time / CG: ", time_cg_total)
+                println("Problem is infeasible.")
             end
-            
-            return mp.mp_status
+            break
         else
             # add columns
             add_columns!(mp, cols)
@@ -107,11 +122,22 @@ function solve_colgen!(
         n_cg_iter += 1
     end
 
-    time_cg_total += time() - time_start
+    # Logs
+    cg_log[:time_cg_total] = time() - time_start
+    cg_log[:dual_bound] = mp.dual_bound
+    cg_log[:primal_bound] = mp.primal_lp_bound
+    cg_log[:n_cg_iter] = n_cg_iter
+    cg_log[:status] = mp.mp_status
+    cg_log[:num_cols_tot] = mp.num_columns_rmp
+
     if env[Val{:verbose}] == 1
-        println("Total time / MP: ", time_mp_total)
-        println("Total time / SP: ", time_sp_total)
-        println("Total time / CG: ", time_cg_total)
+        println()
+        @printf("Total time / MP: %.2fs\n", cg_log[:time_mp_total])
+        @printf("Total time / SP: %.2fs\n", cg_log[:time_sp_total])
+        @printf("Total time / CG: %.2fs\n", cg_log[:time_cg_total])
+        @printf("Inner barrier iterations: %d\n", cg_log[:num_iter_bar])
+        @printf("Inner simplex iterations: %d\n", cg_log[:num_iter_spx])
+        @printf("Pricing calls: %d\n", cg_log[:nsp_priced])
     end
     
     return mp.mp_status

@@ -21,8 +21,8 @@ These Status codes are based on those of MathOptInterface
 )
 
 Status(::T) where T = Unknown
-Status(s::Symbol) = Status(Val{s})
+Status(s::Symbol) = Status(Val(s))
 
-Status(::Type{Val{:Infeasible}}) = PrimalInfeasible
-Status(::Type{Val{:Unbounded}}) = PrimalUnbounded
-Status(::Type{Val{:Optimal}}) = Optimal
+Status(::Val{:Infeasible}) = PrimalInfeasible
+Status(::Val{:Unbounded}) = PrimalUnbounded
+Status(::Val{:Optimal}) = Optimal

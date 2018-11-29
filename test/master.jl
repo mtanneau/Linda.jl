@@ -29,7 +29,6 @@ add_initial_columns!(mp, m, R)
 @test mp.num_columns_rmp == 2*R
 @test MPB.numvar(mp.rmp) == 2*m + 2*R
 
-
 # Solve RMP to optimality
 Linda.solve_rmp!(mp)
 s = MPB.getreducedcosts(mp.rmp)

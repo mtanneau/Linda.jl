@@ -41,6 +41,26 @@ mutable struct LindaOracleMIP <: AbstractLindaOracle
 
         oracle.index = index
 
+        (m, n) = size(A_sub)
+        m == length(row_lb) || throw(DimensionMismatch(
+            "A has $m rows but $(length(row_lb)) row lower bounds"
+        ))
+        m == length(row_ub) || throw(DimensionMismatch(
+            "A has $m rows but $(length(row_lb)) row upper bounds"
+        ))
+        n == length(col_lb) || throw(DimensionMismatch(
+            "A has $n cols but $(length(col_lb)) col lower bounds"
+        ))
+        n == length(col_ub) || throw(DimensionMismatch(
+            "A has $n cols but $(length(col_ub)) col upper bounds"
+        ))
+        n == length(vartypes) || throw(DimensionMismatch(
+            "A has $n cols but $(length(vartypes)) var types"
+        ))
+        n == length(costs) || throw(DimensionMismatch(
+            "A has $n cols but $(length(costs)) objective terms"
+        ))
+
         oracle.costs = costs
         oracle.A_link = A_link
         oracle.A_sub = A_sub
@@ -66,7 +86,8 @@ function query!(
     σ::Real;
     farkas::Bool=false,
     tol_reduced_cost::Float64=1.0e-6,
-    num_columns_max::Int=typemax(Int64)
+    num_columns_max::Int=typemax(Int64),
+    log=Dict()
 ) where{Tv<:Real}
 
     # Dimension checks
