@@ -160,9 +160,7 @@ function query!(
             (e.g. if unboundedness is detected at presolve)
         =#
         @warn("Unbounded sub-problem. Currently not supported.")
-        oracle.status = Unknown
-        
-        #=
+
         # Sub-problem is unbounded
         # Return extreme ray
         ray = MPB.getunboundedray(sp)
@@ -175,7 +173,6 @@ function query!(
             )
         ]
         oracle.pricing_dual_bound = -Inf
-        =#
 
     else
         # TODO
