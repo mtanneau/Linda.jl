@@ -257,7 +257,7 @@ function solve_rmp!(master::LindaMaster)
         master.π .= y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)]
 
     elseif rmp_status == PrimalUnbounded
-        master.primal_bound = -Inf
+        master.primal_lp_bound = -Inf
         master.dual_bound = -Inf
 
         # RMP is unbounded, thus Master is unbounded
