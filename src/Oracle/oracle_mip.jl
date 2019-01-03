@@ -119,7 +119,7 @@ function query!(
 
     if oracle.status == Optimal
         # Sub-problem solved to optimality
-        oracle.pricing_dual_bound = MPB.getobjbound(sp)
+        oracle.pricing_dual_bound = MPB.getobjval(sp)
         x = MPB.getsolution(sp)
         oracle.new_columns = [
             Column(
