@@ -29,7 +29,7 @@ get_reduced_cost(
     π::AbstractVector{Float64},
     σ::Real,
     farkas::Bool=false
-) where{Tv<:Real, Tc<:AbstractArray{Tv}} = (!farkas)*c.cost - dot(π, c.col) - σ
+) where{Tv<:Real, Tc<:AbstractArray{Tv}} = (!farkas)*c.cost - dot(π, c.col) - (c.is_vertex)*σ
 
 get_reduced_cost(
     c::Column{Tv, Tc},
