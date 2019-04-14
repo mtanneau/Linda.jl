@@ -14,13 +14,13 @@ Pool of multiple sub-problems.
 mutable struct LindaOraclePool <: AbstractLindaOracle
     n::Int  # Number of oracles (i.e. sub-problems)
 
-    new_columns::Set{Column}
+    new_columns::Vector{Column}
     status::Status
     sp_dual_bound::Float64
 
     oracles::Vector{AbstractLindaOracle}
 
-    LindaOraclePool(oracles) = new(size(oracles,1), Set{Column}(), Unknown, -Inf, oracles)
+    LindaOraclePool(oracles) = new(size(oracles,1), Column[], Unknown, -Inf, oracles)
 end
 
 """
@@ -50,7 +50,7 @@ function query!(
     log::Dict=Dict()
 ) where{T1<:Real, T2<:Real}
 
-    pool.new_columns = Set{Column}()
+    pool.new_columns = Column[]
 
     # Check dimensions
     pool.n == size(σ, 1) || throw(DimensionMismatch(
@@ -59,6 +59,11 @@ function query!(
 
     pool.sp_dual_bound = (farkas ? (-Inf) : 0.0)
     best_red_cost = 0.0
+
+    # Record order in which sub-problems are solved
+    if !haskey(log, :sp_queries)
+        log[:sp_queries] = []
+    end
 
     # price each sub-problem
     # go through sub-problems in random order
@@ -73,7 +78,8 @@ function query!(
             tol_reduced_cost=tol_reduced_cost
         )
         log[:nsp_priced] += 1
-
+        append!(log[:sp_queries], r)
+        
         # Check for infeasible sub-problem
         s = get_oracle_status(o)
         if s == PrimalInfeasible
