@@ -119,7 +119,7 @@ function query!(
 
     if oracle.status == Optimal
         # Sub-problem solved to optimality
-        oracle.pricing_dual_bound = MPB.getobjbound(sp)
+        oracle.pricing_dual_bound = MPB.getobjval(sp)
         x = MPB.getsolution(sp)
         oracle.new_columns = [
             Column(
@@ -137,6 +137,7 @@ function query!(
 
     elseif oracle.status == PrimalFeasible || oracle.status == PrimalDualFeasible
         # A primal solution is available
+        println("Sub-problem $(oracle.index) solved to sub-optimality")
         oracle.pricing_dual_bound = MPB.getobjbound(sp)
         x = MPB.getsolution(sp)
         oracle.new_columns = [
@@ -159,13 +160,12 @@ function query!(
             may detect unboundedness but do not give access to an unbounded ray
             (e.g. if unboundedness is detected at presolve)
         =#
-        @warn("Unbounded sub-problem. Currently not supported.")
-        oracle.status = Unknown
-        
-        #=
+        # @warn("Unbounded sub-problem. Currently not supported.")
+
         # Sub-problem is unbounded
         # Return extreme ray
         ray = MPB.getunboundedray(sp)
+        ray ./= norm(ray, 2)
         oracle.new_columns = [
             Column(
                 dot(oracle.costs, ray),
@@ -175,7 +175,6 @@ function query!(
             )
         ]
         oracle.pricing_dual_bound = -Inf
-        =#
 
     else
         # TODO
