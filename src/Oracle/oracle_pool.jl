@@ -60,11 +60,6 @@ function query!(
     pool.sp_dual_bound = (farkas ? (-Inf) : 0.0)
     best_red_cost = 0.0
 
-    # Record order in which sub-problems are solved
-    if !haskey(log, :sp_queries)
-        log[:sp_queries] = []
-    end
-
     # price each sub-problem
     # go through sub-problems in random order
     perm = randperm(pool.n)
@@ -78,7 +73,6 @@ function query!(
             tol_reduced_cost=tol_reduced_cost
         )
         log[:nsp_priced] += 1
-        append!(log[:sp_queries], r)
         
         # Check for infeasible sub-problem
         s = get_oracle_status(o)
