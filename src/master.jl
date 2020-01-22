@@ -1,65 +1,28 @@
-import MathProgBase
-const MPB = MathProgBase
+"""
+    Master
 
 """
-    LindaMaster
-
-"""
-mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
+mutable struct Master
 
     #===========================================================================
         RMP data
     ===========================================================================#
     
-    #=
-        RMP Columns
+    rmp::MOI.ModelLike  # Restricted Master Problem
 
-        Variables 1 to `2*m`, in the RMP are artificial variables, with `m` the
-            number of linking constraints.
-        Columns are indexed from `2*m+1` and onwards.
+    # Constraints information
+    con_cvx::Vector{MOI.ConstraintIndex}  # Convexity constraints in RMP
+    con_link::Vector{MOI.ConstraintIndex}  # Linking constraints in RMP
 
-        - `num_columns_rmp`: current number of columns in the RMP, excluding
-            artificial variables.
-        - `active_columns`: Vector of active columns, to be updated every time a
-            column is added to / removed from the RMP
-        
-    =#
-    num_var_link::Int       # Number of linking variables (including artificial ones)
-    num_columns_rmp::Int  # Number of columns currently in RMP
-    active_columns::Vector{Column}  # Active columns
+    rhs_link::Vector{Float64}  # Right-hand side of linking constraints
 
-    #=
-        RMP Constraints
+    π::Vector{Float64}  # Shadow prices (linking constraints)
+    σ::Vector{Float64}  # Shadow marginal costs (convexity constraints)
 
-        The RMP has two types of constraints:
-        - Convexity (1:`num_constr_cvxty`), one per sub-problem
-        - Linking (`num_constr_cvxty+1`:`num_constr_cvxty+num_constr_link`)
-
-        Dual variables:
-        - `π`: vector of dual variables associated to linking constraints,
-            a.k.a the vector of shadow prices.
-            If the RMP is infeasible, π is a (dual) infeasibility ray.
-        - `σ`: vector of dual variables associated to convexity constraints,
-            a.k.a the vector of shadow marginal costs.
-    =#
-    num_constr_cvxty::Int   # Number of convexity constraints
-    num_constr_link::Int  # Number of linking constraints
-    rhs_constr_link::Vector{Float64}  # Right-hand side of linking constraints
-    π::Vector{Float64}  # Shadow prices
-    σ::Vector{Float64}  # Shadow marginal costs
+    # Columns information
+    var_link::Vector{MOI.VariableIndex}  # Linking variables (may be artificial)
+    columns::Vector{MOI.VariableIndex}  # Indices of RMP variables
     
-    #=
-        Restricted Master Problem (RMP)
-
-        The RMP is solved at each iteration of the Column-Generation to 
-            generate a new dual iterate.
-    =#
-    rmp::RMP  # Restricted Master Problem
-
-    # Current status of the RMP
-    # As long as the RMP is infeasbile, Farkas pricing will be used
-    rmp_status::Status  # Status of Restricted Master Problem
-
 
     #===========================================================================
         Column-Generation
@@ -77,8 +40,9 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
             Farkas pricing fails to cut the infeasibility ray.
         - Unbounded if the RMP is unbounded
     =#
-    mp_status::Status  # Status of MasterProblem
-    
+    mp_status::MOI.TerminationStatusCode  # Status of MasterProblem
+    mp_gap::Float64
+
     primal_lp_bound::Float64  # Primal bound for the linear (DW) relaxation
     primal_ip_bound::Float64  # Primal bound for the integer problem
     dual_bound::Float64   # Lagrange dual bound
@@ -89,235 +53,79 @@ mutable struct LindaMaster{RMP<:MPB.AbstractMathProgModel}
         Constructor
     ===========================================================================#
 
-    function LindaMaster(
-        num_constr_cvxty::Int,
-        num_constr_link::Int,
-        rhs_constr_link::AbstractVector{Tv},
-        num_var_link::Int,
-        initial_columns::Vector{Tc},
-        rmp::RMP,
-    ) where{RMP<:MPB.AbstractMathProgModel, Tv<:Real, Tc<:Column}
+    function Master(
+        rmp::MOI.ModelLike,
+        con_cvx::Vector{MOI.ConstraintIndex},
+        con_link::Vector{MOI.ConstraintIndex},
+        rhs_link::Vector{Float64},
+        var_link::Vector{MOI.VariableIndex},
+        columns::Vector{MOI.VariableIndex}
+    )
+        # Check indices
+        mcvx = length(con_cvx)
+        mlink = length(con_link)
+        for cidx in con_cvx
+            MOI.is_valid(rmp, cidx) || error("Invalid constraint index $cidx")
+        end
+        for cidx in con_link
+            MOI.is_valid(rmp, cidx) || error("Invalid constraint index $cidx")
+        end
+        length(rhs_link) == mlink || error(
+            "There are $mlink constraints but RHS has length $(length(rhs_link))"
+        )
 
-        # Dimension check
-        n = MPB.numvar(rmp)
-        ncols = length(initial_columns)
-        n == (num_var_link + ncols) || throw(ErrorException(
-            "RMP has $(n) variables instead of $(num_var_link + ncols)"
-        ))
-        m = MPB.numconstr(rmp)
-        m == (num_constr_cvxty + num_constr_link) || throw(ErrorException(
-            "RMP has $(m) constraints instead of $(num_constr_cvxty + num_constr_link)"
-        ))
-        num_constr_link == size(rhs_constr_link, 1) || throw(DimensionMismatch(
-            "RMP has $(num_constr_link) linking constraints but b has size $(size(rhs_constr_link))"
-        ))
+        # Check variable indices
+        for vidx in var_link
+            MOI.is_valid(rmp, vidx) || error("Invalid variable index $vidx")
+        end
+        for vidx in columns
+            MOI.is_valid(rmp, vidx) || error("Invalid variable index $vidx")
+        end
 
         # Instanciate model
-        mp = new{RMP}()
-
-        # RMP columns
-        mp.num_var_link = num_var_link
-        mp.num_columns_rmp = ncols
-        mp.active_columns = deepcopy(initial_columns)
-
-        # RMP constraints
-        mp.num_constr_cvxty = num_constr_cvxty
-        mp.num_constr_link = num_constr_link
-        mp.rhs_constr_link = copy(rhs_constr_link)
-        mp.π = Vector{Float64}(undef, num_constr_link)
-        mp.σ = Vector{Float64}(undef, num_constr_cvxty)
-
-        # Other RMP info
-        mp.rmp = rmp
-        mp.rmp_status = Unknown
-
-        # Column-Generation info
-        mp.mp_status = Unknown
-        mp.primal_lp_bound = Inf
-        mp.primal_ip_bound = Inf
-        mp.dual_bound = -Inf
-        mp.dual_bound_estimate = -Inf
+        mp = new(
+            rmp,
+            con_cvx, con_link, rhs_link,
+            zeros(mlink), zeros(mcvx),
+            var_link, columns,
+            MOI.OPTIMIZE_NOT_CALLED, Inf, Inf, Inf, -Inf, -Inf
+        )
 
         return mp
     end
 end
 
-function LindaMaster(
-    num_constr_cvxty::Int,
-    num_constr_link::Int,
-    rhs_constr_link::AbstractVector{Tv},
-    senses::AbstractVector{Char},
-    lp_solver::MPB.AbstractMathProgSolver
-) where{Tv<:Real}
-    # Dimension checks
-    num_constr_link == size(rhs_constr_link, 1) || throw(DimensionMismatch(
-        "Right-hand side has wrong dimension."
-    ))
-    # Create RMP
-    rmp = MPB.LinearQuadraticModel(lp_solver)
-    # Add constraints
-    for r in 1:num_constr_cvxty
-        MPB.addconstr!(rmp, Float64[], Float64[], 1.0, 1.0)
-    end
-    for i in 1:num_constr_link
-        MPB.addconstr!(
-            rmp,
-            Float64[],
-            Float64[],
-            rhs_constr_link[i],
-            rhs_constr_link[i]
-        )
-
-    end
-
-    # Add artificial variables
-    num_var_link = 0
-    for i in 1:num_constr_link
-        if senses[i] == '='
-            # Artificial slack and surplus
-            MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
-            MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
-            num_var_link += 2
-        elseif senses[i] == '<'
-            # Regular slack ; artificial surplus
-            MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, Inf, 0.0) # slack
-            MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, 0.0, 10^4) # surplus
-            num_var_link += 2
-        elseif senses[i] == '>'
-            # Artificial slack ; regular surplus
-            MPB.addvar!(rmp, [num_constr_cvxty+i], [1.0], 0.0, 0.0, 10^4) # slack
-            MPB.addvar!(rmp, [num_constr_cvxty+i], [-1.0], 0.0, Inf, 0.0) # surplus
-            num_var_link += 2
-        else
-            error("Unknown sense for constraint $i: `$(senses[i])`")
-        end
-    end
-
-    mp = LindaMaster(
-        num_constr_cvxty,
-        num_constr_link,
-        rhs_constr_link,
-        num_var_link,
-        Column[],
-        rmp
-    )
-
-    return mp
-end
-
-LindaMaster(
-    num_constr_cvxty::Int,
-    num_constr_link::Int,
-    rhs_constr_link::AbstractVector{Tv},
-    lp_solver::MPB.AbstractMathProgSolver
-) where{Tv<:Real} = LindaMaster(
-    num_constr_cvxty,
-    num_constr_link,
-    rhs_constr_link,
-    fill('=', num_constr_link),
-    lp_solver
-)
-
 
 """
-    solve_rmp!(master)
+    add_column!(mp, col)
 
-Solve Restricted Master Problem, and update current dual iterate.
+Add column `col` to Master Problem `mp`.
+
+All columns are non-negative by default.
 """
-function solve_rmp!(master::LindaMaster)
-
-    MPB.optimize!(master.rmp)
-    rmp_status = Status(Val(MPB.status(master.rmp)))
-    master.rmp_status = rmp_status
-
-    # Update dual iterate
-    if rmp_status == Optimal || rmp_status == PrimalDualFeasible
-        # update primal bound
-        master.primal_lp_bound = MPB.getobjval(master.rmp)
-        master.mp_status = PrimalFeasible
-
-        # update dual variables
-        y = MPB.getconstrduals(master.rmp)
-        master.σ .= y[1:master.num_constr_cvxty]
-        master.π .= y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)]
-    
-    elseif rmp_status == PrimalInfeasible
-        # update primal bound
-        master.primal_lp_bound = Inf
-
-        # update dual variables
-        y = MPB.getinfeasibilityray(master.rmp)
-        # Normalize dual ray, for stability purposes
-        nrm = norm(y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)], 1)
-        if nrm > 1e-6
-            y ./= nrm
-        end
-        
-        master.σ .= y[1:master.num_constr_cvxty]
-        master.π .= y[(master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)]
-
-    elseif rmp_status == PrimalUnbounded
-        master.primal_lp_bound = -Inf
-        master.dual_bound = -Inf
-
-        # RMP is unbounded, thus Master is unbounded
-        master.mp_status = PrimalUnbounded
-
-    else
-        # TODO: raise error
-        throw(ErrorException("Unhandled status: $(rmp_status)"))
-    end
-
-    return nothing
-end
-
-
-"""
-    add_column!(master, column)
-
-Add a column to the Master Problem.
-"""
-function add_column!(master::LindaMaster, column::Column)
-    
-    constr_link_idx = collect(
-        (master.num_constr_cvxty+1):(master.num_constr_cvxty+master.num_constr_link)
-    )
-
-    if column.is_in_rmp
-        # column is already in the RMP
-        return false
-    end
+function add_column!(mp::Master, col::Column)
 
     # add column to RMP
-    constr_idx = [column.idx_subproblem ; constr_link_idx]
-    if column.is_vertex
-        # extreme vertex
-        constrcoeff = vcat([1.0], column.col)
-    else
-        # extreme ray
-        constrcoeff = vcat([0.0], column.col)
+    vidx, _ = MOI.add_constrained_variable(mp.rmp, MOI.GreaterThan(0.0))
+
+    # Set objective coefficient
+    MOI.modify(mp.rmp,
+        MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
+        MOI.ScalarCoefficientChange(vidx, col.cost)
+    )
+
+    # Set column coefficient for convexity constraint
+    if col.is_vertex
+        MOI.modify(mp.rmp, mp.con_cvx[col.spind], MOI.ScalarCoefficientChange(vidx, 1.0))
     end
-    MPB.addvar!(master.rmp, constr_idx, constrcoeff, 0.0, Inf, column.cost)
-    
-    # update links
-    push!(master.active_columns, column)  # keep track of active columns
-    master.num_columns_rmp += 1  # update number of columns in RMP
-    
-    column.is_in_rmp = true
-    column.idx_column = master.num_columns_rmp
-
-    return true
-end
-
-
-"""
-    add_columns!
-
-Add several columns to the Master Problem.
-"""
-function add_columns!(master::LindaMaster, columns)
-    for column in columns
-        add_column!(master, column)
+    # Set column coefficients for linking constraints
+    for (i, val) in zip(col.rind, col.rval)
+        MOI.modify(mp.rmp, mp.con_link[i], MOI.ScalarCoefficientChange(vidx, val))
     end
-    return nothing
+
+    # Book-keeping
+    push!(mp.columns, vidx)
+
+    # Done
+    return vidx
 end

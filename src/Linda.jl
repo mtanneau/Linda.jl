@@ -1,15 +1,14 @@
 module Linda
 
-using LinearAlgebra
 using Printf
+
+import MathOptInterface
+const MOI = MathOptInterface
 
 # package code goes here
 include("env.jl")
-include("status.jl")
 include("column.jl")
-# include("subproblem.jl")
-include("Oracle/Oracle.jl")
-
+include("oracle.jl")
 include("master.jl")
 include("colgen.jl")
 
