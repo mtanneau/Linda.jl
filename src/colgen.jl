@@ -8,9 +8,9 @@ Column-Generation algorithm.
 function solve_colgen!(
     env::LindaEnv,
     mp::Master,
-    oracles::Vector{To};
+    oracles;
     cg_log::Dict=Dict()
-) where{To<:Oracle}
+)
 
     # Pre-optimization stuff
     n_cg_iter::Int = 0
