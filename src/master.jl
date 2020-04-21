@@ -55,8 +55,8 @@ mutable struct Master
 
     function Master(
         rmp::MOI.ModelLike,
-        con_cvx::Vector{MOI.ConstraintIndex},
-        con_link::Vector{MOI.ConstraintIndex},
+        con_cvx::Vector{<:MOI.ConstraintIndex},
+        con_link::Vector{<:MOI.ConstraintIndex},
         rhs_link::Vector{Float64},
         var_link::Vector{MOI.VariableIndex},
         columns::Vector{MOI.VariableIndex}

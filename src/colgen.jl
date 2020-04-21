@@ -1,4 +1,5 @@
 using LinearAlgebra
+using Random
 
 """
     colgen()
@@ -96,7 +97,8 @@ function solve_colgen!(
             # Primal and Dual objectives
             @printf("  %+15.8e", mp.primal_lp_bound)
             @printf("  %+15.8e", mp.dual_bound)
-            @printf("  %6.2f", mp.mp_gap)
+            percent_gap = 100 * min(mp.mp_gap, 1.0)
+            @printf("  %6.2f", percent_gap)
             # RMP stats
             @printf("  %8d", length(mp.columns))  # number of columns in RMP
             # @printf("%9.2f", cg_log[:time_mp_total])
@@ -121,7 +123,7 @@ function solve_colgen!(
             # Time limit reached
             mp.mp_status = MOI.TIME_LIMIT
             break
-        elseif length(mp.columns) > env.num_columns_max.val
+        elseif length(mp.columns) > env.num_cols_rmp_max.val
             mp.mp_status = MOI.OTHER_LIMIT
             break
         elseif n_slow_progress > 10
@@ -152,23 +154,40 @@ function solve_colgen!(
 
         # Generate new columns
         new_cols = Tuple{Column, Float64}[]
+        ncols = 0
+        pricing_early_stop = false
         z_lagrange = farkas ? -Inf : dot(mp.π, mp.rhs_link)
-        for (i, o) in enumerate(oracles)
-            # TODO: Check stopping criterion
+        perm = randperm(length(oracles))
+        for i in perm
+            o = oracles[i]
+            # Check stopping criterion
+            if ncols >= env.num_columns_max.val
+                pricing_early_stop = true
+                break
+            end
             
             # Update 
             update!(o, farkas, mp.π, mp.σ[i])
 
             # Solve sub-problem
-            optimize!(o)
+            cg_log[:time_sp_total] += @elapsed optimize!(o)
+            cg_log[:nsp_priced] += 1
 
             # Recover columns
             cols = get_columns(o)
-            append!(new_cols, cols)
+            if length(cols) > 0
+                col, rc = cols[1]
+                if rc <= - env.tol_reduced_cost.val
+                    push!(new_cols, (col, rc))
+                    ncols += 1
+                end
+            end
 
             # Update Lagrange bound
             z_lagrange += get_dual_bound(o)
         end
+
+        z_lagrange = pricing_early_stop ? -Inf : z_lagrange
 
         # Lagrange bound update
         mp.dual_bound = max(mp.dual_bound, z_lagrange)
