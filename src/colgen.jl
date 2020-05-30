@@ -10,7 +10,8 @@ function solve_colgen!(
     env::LindaEnv,
     mp::Master,
     oracles;
-    cg_log::Dict=Dict()
+    cg_log::Dict=Dict(),
+    callback::Function= ()-> nothing
 )
 
     # Pre-optimization stuff
@@ -33,6 +34,7 @@ function solve_colgen!(
 
     # CG loop
     while true
+        cg_log[:n_cg_iter] = n_cg_iter
 
         #
         # Solve RMP
@@ -92,6 +94,7 @@ function solve_colgen!(
         #
         # Log
         # 
+        callback()
         if env[Val{:verbose}] == 1
             @printf "%4d" n_cg_iter
             # Primal and Dual objectives
